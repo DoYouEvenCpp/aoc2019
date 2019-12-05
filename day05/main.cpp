@@ -8,6 +8,8 @@
 #include <array>
 #include <cmath>
 #include <tuple>
+#include <cassert>
+
 
 namespace {
 enum class OpCodes {
@@ -25,11 +27,12 @@ enum class ParamMode {
 
 std::ostream& operator<<(std::ostream& s, OpCodes code) {
     switch (code) {
-        case OpCodes::STOP: s       << "STOP"; break;
-        case OpCodes::ADD: s        << "ADD"; break;
-        case OpCodes::MULTIPLY: s   << "MULTIPLY"; break;
-        case OpCodes::STORE: s      << "STORE"; break;
-        case OpCodes::OUTPUT: s     << "OUTPUT"; break;
+        case OpCodes::STOP:     s << "STOP"; break;
+        case OpCodes::ADD:      s << "ADD"; break;
+        case OpCodes::MULTIPLY: s << "MULTIPLY"; break;
+        case OpCodes::STORE:    s << "STORE"; break;
+        case OpCodes::OUTPUT:   s << "OUTPUT"; break;
+        default:                s << std::to_string(static_cast<int>(code)); break;
     }
     return s;
 }
@@ -37,7 +40,7 @@ std::ostream& operator<<(std::ostream& s, OpCodes code) {
 
 struct OpCode {
     OpCodes code;
-    std::vector<int> params;
+    std::vector<int> param_modes;
 };
 
 auto SECOND_PUZZLE = 19690720;
@@ -51,13 +54,6 @@ const auto printInput = [](auto& input) {
     std::cout << '\n';
 };
 
-
-const auto parseOpCode = [](auto value) -> OpCode {
-    if (static_cast<OpCodes>(value) == OpCodes::STOP) {
-        return {OpCodes::STOP, {}};
-    }
-};
-
 const auto convertToVector = [](int value) {
         const auto s = std::to_string(value);
         std::vector<int> res;
@@ -67,16 +63,30 @@ const auto convertToVector = [](int value) {
         return res;
     };
 
-const auto splitOpCodeAndParams = [](int value) {
+const auto extractOpCodeAndParams = [](int value) {
     const auto v = convertToVector(value);
-    auto opCode = v[v.size() - 2] * 10;
-    opCode += v.back();
-
+    OpCode oc;
+    auto code = v[v.size() - 2] * 10;
+    code += v.back();
+    assert(code == 99 || code == 1 || code == 2 || code == 3 || code == 4);
+    oc.code = static_cast<OpCodes>(code);
     //iterate over every single parameter
     for (int i = v.size() - 3; i >= 0; --i) {
+        oc.param_modes.push_back(v[i]);
     }
+
+    return oc;
 };
 
+const auto parseOpCode = [](auto value) -> OpCode {
+    if (static_cast<OpCodes>(value) == OpCodes::STOP)
+        return {OpCodes::STOP, {}};
+    else if (static_cast<OpCodes>(value) == OpCodes::STOP)
+        return {OpCodes::STOP, {}};
+    else if (static_cast<OpCodes>(value) == OpCodes::STOP)
+        return {OpCodes::STOP, {}};
+    else extractOpCodeAndParams(value);
+};
 
 const auto runProgram = [](int noun, int verb) {
     auto input = input_org;
@@ -104,6 +114,9 @@ const auto runProgram = [](int noun, int verb) {
         else if (opCode == OpCodes::MULTIPLY) {
             const auto res = input[firstOperandPos] * input[secondOperandPos];
             input[resultPos] = res;
+        }
+        else if (opCode == OpCodes::OUTPUT) {
+            std::cout << "OUTPUT: \n";
         }
         else {
             std::cout << "ZONK - " << opCode << "\n";
