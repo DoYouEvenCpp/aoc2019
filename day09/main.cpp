@@ -243,6 +243,186 @@ private:
     bool firstParamUsed{false};
 };
 
+
+class IntCodeComputer {
+private:
+    std::vector<int> memory;
+    std::optional<int> onceParam;
+    size_t ip {0};
+    int relativeBase {0};
+    OpCodes lastOpCode {};
+    bool isDebugEnabled {false};
+
+
+public:
+    IntCodeComputer(std::vector<int>& mem): memory(mem) {
+    }
+
+    void updateMemoryLocation(size_t pos, int value) {
+        memory[pos] = value;
+    }
+
+    void setMemory(std::vector<int>& m) {
+        memory = m;
+    }
+
+    void useOnce(int param) {
+        onceParam = param;
+    }
+
+    void updateInstructionPointerPosition(size_t pos) {
+        ip = pos;
+    }
+
+    void enableDebug() {
+        isDebugEnabled = true;
+    }
+
+    void disableDebug() {
+        isDebugEnabled = false;
+    }
+
+    OpCodes getLatestCode() const {
+        return lastOpCode;
+    }
+
+    std::tuple<int, OpCodes, int> run(int param) {
+        bool shouldBrake = false;
+        int64_t answer = 0;
+        while(true) {
+            auto [opCode, mode1, mode2, mode3] = getParamModes();
+
+            switch(opCode) {
+                case OpCodes::STOP: {
+                    ++ip;
+                    break;
+                }
+                case OpCodes::ADD: {
+                    const auto firstParam = getValue(mode1, memory[ip + 1]);
+                    const auto secondParam = getValue(mode2, memory[ip + 2]);
+                    const auto pos = memory[ip + 3];
+                    memory[pos] = firstParam + secondParam;
+                    if (isDebugEnabled)
+                        std::cout << "ADD: mem[" << pos << "] = " << firstParam + secondParam << '\n';
+                    ip += 4;
+                    break;
+                }
+                case OpCodes::MULTIPLY: {
+                    const auto firstParam = getValue(mode1, memory[ip + 1]);
+                    const auto secondParam = getValue(mode2, memory[ip + 2]);
+                    const auto pos = memory[ip + 3];
+                    memory[pos] = firstParam * secondParam;
+                    if (isDebugEnabled)
+                        std::cout << "ADD: mem[" << pos << "] = " << firstParam * secondParam << '\n';
+                    ip += 4;
+                    break;
+                }
+                case OpCodes::STORE: {
+                    const auto pos = memory[ip + 1];
+                    const auto val = onceParam? *onceParam: param;
+                    if (isDebugEnabled)
+                        std::cout << "STORE: input[" << pos << "] = " << val << '\n';
+
+                    if (onceParam) {
+                        onceParam.reset();
+                    }
+                    ip += 2;
+                    break;
+                }
+                case OpCodes::OUTPUT: {
+                    const auto val = getValue(mode1, memory[ip + 1]);
+                    if (isDebugEnabled)
+                        std::cout << '>' << val << "<\n";
+
+                    answer = val;
+                    shouldBrake = true;
+                    ip += 2;
+                    break;
+                }
+                case OpCodes::JUMP_TRUE: {
+                    /*
+                        const auto firstOperandVal = input[index + 1];
+                        const auto firstParam = code.param_modes[0] == 0 ? input[firstOperandVal] : firstOperandVal;
+                        if (firstParam != 0) {
+                            const auto secondOperandVal = input[index + 2];
+                            const auto val = code.param_modes[1] == 0 ? input[secondOperandVal] : secondOperandVal;;
+                            //
+                            index = val;
+                        }
+                        else index += 3;
+                    */
+                    const auto firstParam = getValue(mode1, memory[ip + 1]);
+                    if (firstParam != 0) {
+                        const auto secondParam = getValue(mode2, memory[ip + 2]);
+                        if (isDebugEnabled)
+                            std::cout << "JUMP_TRUE: IP(" << ip << ") set to " << secondParam << '\n';
+                        ip = secondParam;
+                    }
+                    else
+                        ip += 3;
+                    break;
+                }
+                case OpCodes::JUMP_FALSE: {
+                    break;
+                }
+                case OpCodes::LESS_THAN: {
+                    break;
+                }
+                case OpCodes::EQUALS: {
+                    break;
+                }
+                case OpCodes::UPDATE_BASE: {
+                    break;
+                }
+            }
+            if (shouldBrake) break;
+        }
+
+        //return {answer};
+        return {};
+    }
+
+private:
+
+    std::tuple<OpCodes, int, int, int> getParamModes() {
+        const auto value = memory[ip];
+        const auto opCode = convertToOpCode(value % 100);
+        const auto param1Mode = (value / 100) % 10;
+        const auto param2Mode = (value / 1000) % 10;
+        const auto param3Mode = (value / 10000) % 10;
+        return {opCode, param1Mode, param2Mode, param3Mode};
+    }
+
+int64_t getValue(int mode, int val) {
+    if (mode == 0) return memory[val];                  //positional
+    if (mode == 1) return val;                          //immediate
+    if (mode == 2) return memory[val + relativeBase];   //relative
+    assert(false);
+    return {};
+}
+
+OpCodes convertToOpCode(int code) {
+    switch(code) {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 99:
+            return static_cast<OpCodes>(code);
+        default: {
+            std::cout << "ALARM! " << code << '\n';
+            assert(false);
+        };
+    }
+    return {};
+}
+};
+
 int main()
 {
     return 0;
