@@ -9,6 +9,7 @@
 #include <cmath>
 #include <tuple>
 #include <cassert>
+#include <optional>
 
 
 namespace {
@@ -291,6 +292,7 @@ public:
         int64_t answer = 0;
         while(true) {
             auto [opCode, mode1, mode2, mode3] = getParamModes();
+            lastOpCode = opCode;
 
             switch(opCode) {
                 case OpCodes::STOP: {
@@ -340,17 +342,6 @@ public:
                     break;
                 }
                 case OpCodes::JUMP_TRUE: {
-                    /*
-                        const auto firstOperandVal = input[index + 1];
-                        const auto firstParam = code.param_modes[0] == 0 ? input[firstOperandVal] : firstOperandVal;
-                        if (firstParam != 0) {
-                            const auto secondOperandVal = input[index + 2];
-                            const auto val = code.param_modes[1] == 0 ? input[secondOperandVal] : secondOperandVal;;
-                            //
-                            index = val;
-                        }
-                        else index += 3;
-                    */
                     const auto firstParam = getValue(mode1, memory[ip + 1]);
                     if (firstParam != 0) {
                         const auto secondParam = getValue(mode2, memory[ip + 2]);
@@ -363,12 +354,37 @@ public:
                     break;
                 }
                 case OpCodes::JUMP_FALSE: {
+                    const auto firstParam = getValue(mode1, memory[ip + 1]);
+                    if (firstParam == 0) {
+                        const auto secondParam = getValue(mode2, memory[ip + 2]);
+                        if (isDebugEnabled)
+                            std::cout << "JUMP_FALSE: IP(" << ip << ") set to " << secondParam << '\n';
+                        ip = secondParam;
+                    }
+                    else
+                        ip += 3;
                     break;
                 }
                 case OpCodes::LESS_THAN: {
+                    const auto firstParam = getValue(mode1, memory[ip + 1]);
+                    const auto secondParam = getValue(mode2, memory[ip + 2]);
+                    const auto pos = memory[ip + 3];
+                    const auto val = firstParam < secondParam;
+                    memory[pos] = val;
+                    if (isDebugEnabled)
+                        std::cout << "LESS_THAN: memory[" << pos << "] = " << val << '\n';
+                    ip += 4;
                     break;
                 }
                 case OpCodes::EQUALS: {
+                    const auto firstParam = getValue(mode1, memory[ip + 1]);
+                    const auto secondParam = getValue(mode2, memory[ip + 2]);
+                    const auto pos = memory[ip + 3];
+                    const auto val = firstParam == secondParam;
+                    memory[pos] = val;
+                    if (isDebugEnabled)
+                        std::cout << "EQUALS: memory[" << pos << "] = " << val << '\n';
+                    ip += 4;
                     break;
                 }
                 case OpCodes::UPDATE_BASE: {
@@ -378,8 +394,7 @@ public:
             if (shouldBrake) break;
         }
 
-        //return {answer};
-        return {};
+        return std::make_tuple(answer, lastOpCode, ip);
     }
 
 private:
