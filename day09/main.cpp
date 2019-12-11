@@ -38,7 +38,7 @@ std::ostream& operator<<(std::ostream& s, OpCodes code) {
         case OpCodes::LESS_THAN:    s << "LESS_THAN"; break;
         case OpCodes::EQUALS:       s << "EQUALS"; break;
         case OpCodes::UPDATE_BASE:  s << "UPDATE_BASE"; break;
-        default:                    s << std::to_string(static_cast<int>(code)); break;
+        default:                    s << std::to_string(static_cast<int64_t>(code)); break;
     }
     return s;
 }
@@ -46,7 +46,7 @@ std::ostream& operator<<(std::ostream& s, OpCodes code) {
 
 struct OpCode {
     OpCodes code;
-    std::vector<int> param_modes;
+    std::vector<int64_t> param_modes;
 };
 
 std::vector input_org = { 1102,34463338,34463338,63,1007,63,34463338,63,1005,63,53,1102,3,1,1000,109,988,209,12,9,1000,209,6,209,3,203,0,1008,1000,1,63,1005,63,65,1008,1000,2,63,1005,63,904,1008,1000,0,63,1005,63,58,4,25,104,0,99,4,0,104,0,99,4,17,104,0,99,0,0,1101,0,26,1014,1102,1,30,1013,1101,22,0,1000,1101,0,35,1015,1101,0,34,1011,1102,0,1,1020,1102,1,481,1022,1101,0,36,1003,1102,1,28,1005,1101,857,0,1024,1101,20,0,1008,1101,0,385,1026,1102,37,1,1006,1101,33,0,1017,1101,0,38,1002,1102,23,1,1007,1102,32,1,1010,1101,29,0,1016,1102,1,25,1009,1102,1,27,1012,1101,24,0,1018,1101,474,0,1023,1102,1,39,1004,1101,0,31,1001,1102,378,1,1027,1101,0,848,1025,1102,21,1,1019,1102,760,1,1029,1102,1,1,1021,1101,769,0,1028,109,-6,2107,21,6,63,1005,63,199,4,187,1106,0,203,1001,64,1,64,1002,64,2,64,109,16,2101,0,-6,63,1008,63,39,63,1005,63,225,4,209,1106,0,229,1001,64,1,64,1002,64,2,64,109,5,2108,20,-7,63,1005,63,247,4,235,1105,1,251,1001,64,1,64,1002,64,2,64,109,-1,2108,36,-8,63,1005,63,267,1106,0,273,4,257,1001,64,1,64,1002,64,2,64,109,-13,1201,-1,0,63,1008,63,22,63,1005,63,299,4,279,1001,64,1,64,1106,0,299,1002,64,2,64,109,15,2102,1,-8,63,1008,63,20,63,1005,63,321,4,305,1106,0,325,1001,64,1,64,1002,64,2,64,109,-13,21108,40,40,8,1005,1011,347,4,331,1001,64,1,64,1105,1,347,1002,64,2,64,109,-2,1207,8,24,63,1005,63,363,1105,1,369,4,353,1001,64,1,64,1002,64,2,64,109,35,2106,0,-9,1001,64,1,64,1106,0,387,4,375,1002,64,2,64,109,-26,21102,41,1,3,1008,1013,41,63,1005,63,409,4,393,1106,0,413,1001,64,1,64,1002,64,2,64,109,2,1202,-6,1,63,1008,63,36,63,1005,63,433,1106,0,439,4,419,1001,64,1,64,1002,64,2,64,109,-3,21102,42,1,10,1008,1019,40,63,1005,63,463,1001,64,1,64,1106,0,465,4,445,1002,64,2,64,109,15,2105,1,-1,1001,64,1,64,1106,0,483,4,471,1002,64,2,64,109,-27,1207,3,23,63,1005,63,505,4,489,1001,64,1,64,1105,1,505,1002,64,2,64,109,13,2102,1,-9,63,1008,63,28,63,1005,63,525,1105,1,531,4,511,1001,64,1,64,1002,64,2,64,109,1,2101,0,-8,63,1008,63,35,63,1005,63,551,1105,1,557,4,537,1001,64,1,64,1002,64,2,64,109,6,21107,43,44,-4,1005,1013,575,4,563,1106,0,579,1001,64,1,64,1002,64,2,64,109,-9,1201,-4,0,63,1008,63,40,63,1005,63,599,1105,1,605,4,585,1001,64,1,64,1002,64,2,64,109,12,1206,1,621,1001,64,1,64,1106,0,623,4,611,1002,64,2,64,109,-22,1202,9,1,63,1008,63,23,63,1005,63,649,4,629,1001,64,1,64,1105,1,649,1002,64,2,64,109,17,1206,5,667,4,655,1001,64,1,64,1106,0,667,1002,64,2,64,109,-3,1205,9,685,4,673,1001,64,1,64,1106,0,685,1002,64,2,64,109,3,1208,-9,37,63,1005,63,707,4,691,1001,64,1,64,1105,1,707,1002,64,2,64,109,7,1205,-2,723,1001,64,1,64,1106,0,725,4,713,1002,64,2,64,109,-15,21101,44,0,8,1008,1015,45,63,1005,63,745,1105,1,751,4,731,1001,64,1,64,1002,64,2,64,109,28,2106,0,-7,4,757,1001,64,1,64,1106,0,769,1002,64,2,64,109,-12,21101,45,0,-5,1008,1018,45,63,1005,63,791,4,775,1105,1,795,1001,64,1,64,1002,64,2,64,109,-9,2107,26,-5,63,1005,63,815,1001,64,1,64,1106,0,817,4,801,1002,64,2,64,109,-1,21107,46,45,-3,1005,1010,833,1105,1,839,4,823,1001,64,1,64,1002,64,2,64,109,3,2105,1,8,4,845,1001,64,1,64,1106,0,857,1002,64,2,64,109,-9,1208,-4,37,63,1005,63,877,1001,64,1,64,1105,1,879,4,863,1002,64,2,64,109,8,21108,47,46,2,1005,1017,895,1106,0,901,4,885,1001,64,1,64,4,64,99,21102,1,27,1,21102,1,915,0,1106,0,922,21201,1,14429,1,204,1,99,109,3,1207,-2,3,63,1005,63,964,21201,-2,-1,1,21102,1,942,0,1105,1,922,21202,1,1,-1,21201,-2,-3,1,21101,957,0,0,1106,0,922,22201,1,-1,-2,1105,1,968,21201,-2,0,-2,109,-3,2105,1,0};
@@ -59,17 +59,17 @@ const auto printInput = [](auto& input) {
     std::cout << '\n';
 };
 
-const auto convertToVector = [](int value) {
+const auto convertToVector = [](int64_t value) {
         const auto s = std::to_string(value);
-        std::vector<int> res;
+        std::vector<int64_t> res;
         for (auto e: s) {
-            res.push_back(static_cast<int>(e - 48));
+            res.push_back(static_cast<int64_t>(e - 48));
         }
         return res;
     };
 
-const auto extractOpCodeAndParams = [](int value) {
-    if (value >= 1 && value <= 8) return OpCode{ static_cast<OpCodes>(value), std::vector<int>{0,0,0} };
+const auto extractOpCodeAndParams = [](int64_t value) {
+    if (value >= 1 && value <= 8) return OpCode{ static_cast<OpCodes>(value), std::vector<int64_t>{0,0,0} };
     const auto v = convertToVector(value);
     OpCode oc;
     auto code = v[v.size() - 2] * 10;
@@ -81,11 +81,11 @@ const auto extractOpCodeAndParams = [](int value) {
     oc.code = static_cast<OpCodes>(code);
 
     //iterate over every single parameter
-    int j = 0;
+    int64_t j = 0;
     if (code == 1 || code == 2 || code == 7 || code == 8) oc.param_modes = { 0, 0, 0 };
     else if (code == 5 || code == 6) oc.param_modes = { 0,0 };
     else if (code == 3 || code == 4) oc.param_modes = { 0 };
-    for (int i = v.size() - 3; i >= 0; --i) {
+    for (int64_t i = v.size() - 3; i >= 0; --i) {
         oc.param_modes[j++] = v[i];
     }
 
@@ -98,10 +98,10 @@ const auto parseOpCode = [](auto value) -> OpCode {
     else return extractOpCodeAndParams(value);
 };
 
-const auto runProgram = [](int paramA, int paramB, int ip, bool& firstParamUsed, std::vector<int>& input) {
+const auto runProgram = [](int64_t paramA, int64_t paramB, int64_t ip, bool& firstParamUsed, std::vector<int64_t>& input) {
     //auto input = input_org;
     auto answer = 0;
-    int index = ip;
+    int64_t index = ip;
     OpCodes latestCode;
     for (auto i = 0u; i < input.size();) {
         auto code = parseOpCode(input[index]);
@@ -220,13 +220,13 @@ const auto runProgram = [](int paramA, int paramB, int ip, bool& firstParamUsed,
 }
 
 struct Amp {
-    Amp(int phase, std::vector<int>& input) :
+    Amp(int64_t phase, std::vector<int64_t>& input) :
         phase(phase),
         mInput(input)
     {
     }
 
-    int process(int inputParam) {
+    int64_t process(int64_t inputParam) {
         const auto [signal, code, instruction_pointer] = runProgram(phase, inputParam, ip, firstParamUsed, mInput);
         isFinished = (code == OpCodes::STOP);
         ip = instruction_pointer;
@@ -237,9 +237,9 @@ struct Amp {
         return !isFinished;
     }
 private:
-    int phase;
-    int ip {0};
-    std::vector<int> mInput;
+    int64_t phase;
+    int64_t ip {0};
+    std::vector<int64_t> mInput;
     bool isFinished {false};
     bool firstParamUsed{false};
 };
@@ -247,176 +247,181 @@ private:
 
 class IntCodeComputer {
 private:
-    std::vector<int> memory;
-    std::optional<int> onceParam;
+    std::vector<int64_t> memory;
+    std::optional<int64_t> onceParam;
     size_t ip {0};
-    int relativeBase {0};
+    int64_t relativeBase {0};
     OpCodes lastOpCode {};
     bool isDebugEnabled {false};
+    bool isOutPutDebugEnabled {false};
     bool shallOutputBreakExecution{ false };
 
 
 public:
-    IntCodeComputer(std::vector<int> const& mem): memory(mem) {
-    }
+IntCodeComputer(std::vector<int64_t> const& mem): memory(mem) {
+}
 
-    void updateMemoryLocation(size_t pos, int value) {
-        memory[pos] = value;
-    }
+void updateMemoryLocation(size_t pos, int64_t value) {
+    memory[pos] = value;
+}
 
-    void setMemory(std::vector<int>& m) {
-        memory = m;
-    }
+void setMemory(std::vector<int64_t>& m) {
+    memory = m;
+}
 
-    void useOnce(int param) {
-        onceParam = param;
-    }
+void useOnce(int64_t param) {
+    onceParam = param;
+}
 
-    void updateInstructionPointerPosition(size_t pos) {
-        ip = pos;
-    }
+void updateInstructionPointerPosition(size_t pos) {
+    ip = pos;
+}
 
-    void enableDebug() {
-        isDebugEnabled = true;
-    }
+void enableDebug() {
+    isDebugEnabled = true;
+}
 
-    void disableDebug() {
-        isDebugEnabled = false;
-    }
+void disableDebug() {
+    isDebugEnabled = false;
+}
 
-    OpCodes getLatestCode() const {
-        return lastOpCode;
-    }
+OpCodes getLatestCode() const {
+    return lastOpCode;
+}
 
-    void runTests(int param) {
-        const auto debugOrgValue = isDebugEnabled;
-        isDebugEnabled = true;
-        const auto orgValue = shallOutputBreakExecution;
-        shallOutputBreakExecution = false;
-        run(param);
-        shallOutputBreakExecution = orgValue;
-        isDebugEnabled = debugOrgValue;
-    }
+void runTests(int64_t param) {
+    isOutPutDebugEnabled = true;
+    //isDebugEnabled = true;
+    const auto orgValue = shallOutputBreakExecution;
+    shallOutputBreakExecution = false;
+    run(param);
+    shallOutputBreakExecution = orgValue;
+    isOutPutDebugEnabled = false;
+}
 
-    std::tuple<int, OpCodes, int> run(int param) {
-        bool shouldBrake = false;
-        int64_t answer = 0;
-        while(true) {
-            auto [opCode, mode1, mode2, mode3] = getParamModes();
-            lastOpCode = opCode;
+std::tuple<int64_t, OpCodes, int64_t> run(int64_t param) {
+    bool shouldBrake = false;
+    int64_t answer = 0;
+    while(true) {
+        auto [opCode, mode1, mode2, mode3] = getParamModes();
+        lastOpCode = opCode;
 
-            switch(opCode) {
-                case OpCodes::STOP: {
-                    ++ip;
-                    shouldBrake = true;
-                    break;
-                }
-                case OpCodes::ADD: {
-                    const auto firstParam = getValue(mode1, memory[ip + 1]);
-                    const auto secondParam = getValue(mode2, memory[ip + 2]);
-                    const auto pos = memory[ip + 3];
-                    memory[pos] = firstParam + secondParam;
-                    if (isDebugEnabled)
-                        std::cout << "ADD: mem[" << pos << "] = " << firstParam + secondParam << '\n';
-                    ip += 4;
-                    break;
-                }
-                case OpCodes::MULTIPLY: {
-                    const auto firstParam = getValue(mode1, memory[ip + 1]);
-                    const auto secondParam = getValue(mode2, memory[ip + 2]);
-                    const auto pos = memory[ip + 3];
-                    memory[pos] = firstParam * secondParam;
-                    if (isDebugEnabled)
-                        std::cout << "ADD: mem[" << pos << "] = " << firstParam * secondParam << '\n';
-                    ip += 4;
-                    break;
-                }
-                case OpCodes::STORE: {
-                    const auto pos = memory[ip + 1];
-                    const auto val = onceParam? *onceParam: param;
-                    memory[pos] = val;
-                    if (isDebugEnabled)
-                        std::cout << "STORE: input[" << pos << "] = " << val << '\n';
-
-                    if (onceParam) {
-                        onceParam.reset();
-                    }
-                    ip += 2;
-                    break;
-                }
-                case OpCodes::OUTPUT: {
-                    const auto val = getValue(mode1, memory[ip + 1]);
-                    if (isDebugEnabled)
-                        std::cout << '>' << val << "<\n";
-
-                    answer = val;
-                    if (shallOutputBreakExecution)
-                        shouldBrake = true;
-                    ip += 2;
-                    break;
-                }
-                case OpCodes::JUMP_TRUE: {
-                    const auto firstParam = getValue(mode1, memory[ip + 1]);
-                    if (firstParam != 0) {
-                        const auto secondParam = getValue(mode2, memory[ip + 2]);
-                        if (isDebugEnabled)
-                            std::cout << "JUMP_TRUE: IP(" << ip << ") set to " << secondParam << '\n';
-                        ip = secondParam;
-                    }
-                    else
-                        ip += 3;
-                    break;
-                }
-                case OpCodes::JUMP_FALSE: {
-                    const auto firstParam = getValue(mode1, memory[ip + 1]);
-                    if (firstParam == 0) {
-                        const auto secondParam = getValue(mode2, memory[ip + 2]);
-                        if (isDebugEnabled)
-                            std::cout << "JUMP_FALSE: IP(" << ip << ") set to " << secondParam << '\n';
-                        ip = secondParam;
-                    }
-                    else
-                        ip += 3;
-                    break;
-                }
-                case OpCodes::LESS_THAN: {
-                    const auto firstParam = getValue(mode1, memory[ip + 1]);
-                    const auto secondParam = getValue(mode2, memory[ip + 2]);
-                    const auto pos = memory[ip + 3];
-                    const auto val = firstParam < secondParam;
-                    memory[pos] = val;
-                    if (isDebugEnabled)
-                        std::cout << "LESS_THAN: memory[" << pos << "] = " << val << '\n';
-                    ip += 4;
-                    break;
-                }
-                case OpCodes::EQUALS: {
-                    const auto firstParam = getValue(mode1, memory[ip + 1]);
-                    const auto secondParam = getValue(mode2, memory[ip + 2]);
-                    const auto pos = memory[ip + 3];
-                    const auto val = firstParam == secondParam;
-                    memory[pos] = val;
-                    if (isDebugEnabled)
-                        std::cout << "EQUALS: memory[" << pos << "] = " << val << '\n';
-                    ip += 4;
-                    break;
-                }
-                case OpCodes::UPDATE_BASE: {
-                    const auto pos = getValue(mode1, memory[ip + 1]);
-                    relativeBase += memory[pos];
-                    ip += 2;
-                    break;
-                }
+        switch(opCode) {
+            case OpCodes::STOP: {
+                ++ip;
+                shouldBrake = true;
+                if (isDebugEnabled)
+                    std::cout << "TERMINATE (ip: " << ip << ", opCode: " << lastOpCode << ")\n";
+                break;
             }
-            if (shouldBrake) break;
-        }
+            case OpCodes::ADD: {
+                const auto firstParam = getValue(mode1, memory[ip + 1]);
+                const auto secondParam = getValue(mode2, memory[ip + 2]);
+                const auto pos = memory[ip + 3];
+                memory[pos] = firstParam + secondParam;
+                if (isDebugEnabled)
+                    std::cout << "ADD: mem[" << pos << "] = " << firstParam + secondParam << '\n';
+                ip += 4;
+                break;
+            }
+            case OpCodes::MULTIPLY: {
+                const auto firstParam = getValue(mode1, memory[ip + 1]);
+                const auto secondParam = getValue(mode2, memory[ip + 2]);
+                const auto pos = memory[ip + 3];
+                memory[pos] = firstParam * secondParam;
+                if (isDebugEnabled)
+                    std::cout << "ADD: mem[" << pos << "] = " << firstParam * secondParam << '\n';
+                ip += 4;
+                break;
+            }
+            case OpCodes::STORE: {
+                const auto pos = memory[ip + 1];
+                const auto val = onceParam? *onceParam: param;
+                memory[pos] = val;
+                if (isDebugEnabled)
+                    std::cout << "STORE: input[" << pos << "] = " << val << '\n';
 
-        return std::make_tuple(answer, lastOpCode, ip);
+                if (onceParam) {
+                    onceParam.reset();
+                }
+                ip += 2;
+                break;
+            }
+            case OpCodes::OUTPUT: {
+                const auto val = getValue(mode1, memory[ip + 1]);
+                if (isOutPutDebugEnabled)
+                    std::cout << '>' << val << "<\n";
+
+                answer = val;
+                if (shallOutputBreakExecution)
+                    shouldBrake = true;
+                ip += 2;
+                break;
+            }
+            case OpCodes::JUMP_TRUE: {
+                const auto firstParam = getValue(mode1, memory[ip + 1]);
+                if (firstParam != 0) {
+                    const auto secondParam = getValue(mode2, memory[ip + 2]);
+                    if (isDebugEnabled)
+                        std::cout << "JUMP_TRUE: IP(" << ip << ") set to " << secondParam << '\n';
+                    ip = secondParam;
+                }
+                else
+                    ip += 3;
+                break;
+            }
+            case OpCodes::JUMP_FALSE: {
+                const auto firstParam = getValue(mode1, memory[ip + 1]);
+                if (firstParam == 0) {
+                    const auto secondParam = getValue(mode2, memory[ip + 2]);
+                    if (isDebugEnabled)
+                        std::cout << "JUMP_FALSE: IP(" << ip << ") set to " << secondParam << '\n';
+                    ip = secondParam;
+                }
+                else
+                    ip += 3;
+                break;
+            }
+            case OpCodes::LESS_THAN: {
+                const auto firstParam = getValue(mode1, memory[ip + 1]);
+                const auto secondParam = getValue(mode2, memory[ip + 2]);
+                const auto pos = memory[ip + 3];
+                const auto val = firstParam < secondParam;
+                memory[pos] = val;
+                if (isDebugEnabled)
+                    std::cout << "LESS_THAN: memory[" << pos << "] = " << val
+                    << " mode1: " << mode1
+                    << " mode2: " << mode2
+                    << '\n';
+                ip += 4;
+                break;
+            }
+            case OpCodes::EQUALS: {
+                const auto firstParam = getValue(mode1, memory[ip + 1]);
+                const auto secondParam = getValue(mode2, memory[ip + 2]);
+                const auto pos = memory[ip + 3];
+                const auto val = firstParam == secondParam;
+                memory[pos] = val;
+                if (isDebugEnabled)
+                    std::cout << "EQUALS: memory[" << pos << "] = " << val << '\n';
+                ip += 4;
+                break;
+            }
+            case OpCodes::UPDATE_BASE: {
+                const auto pos = getValue(mode1, memory[ip + 1]);
+                relativeBase += memory[pos];
+                ip += 2;
+                break;
+            }
+        }
+        if (shouldBrake) break;
     }
+
+    return std::make_tuple(answer, lastOpCode, ip);
+}
 
 private:
-
-    std::tuple<OpCodes, int, int, int> getParamModes() {
+std::tuple<OpCodes, int64_t, int64_t, int64_t> getParamModes() {
         const auto value = memory[ip];
         const auto opCode = convertToOpCode(value % 100);
         const auto param1Mode = (value / 100) % 10;
@@ -425,7 +430,7 @@ private:
         return {opCode, param1Mode, param2Mode, param3Mode};
     }
 
-int64_t getValue(int mode, int val) {
+int64_t getValue(int64_t mode, int64_t val) {
     if (mode == 0) return memory[val];                  //positional
     if (mode == 1) return val;                          //immediate
     if (mode == 2) return memory[val + relativeBase];   //relative
@@ -433,7 +438,7 @@ int64_t getValue(int mode, int val) {
     return {};
 }
 
-OpCodes convertToOpCode(int code) {
+OpCodes convertToOpCode(int64_t code) {
     switch(code) {
         case 1:
         case 2:
@@ -457,12 +462,42 @@ OpCodes convertToOpCode(int code) {
 
 int main()
 {
-    std::vector input = { 1102,34463338,34463338,63,1007,63,34463338,63,1005,63,53,1102,3,1,1000,109,988,209,12,9,1000,209,6,209,3,203,0,1008,1000,1,63,1005,63,65,1008,1000,2,63,1005,63,904,1008,1000,0,63,1005,63,58,4,25,104,0,99,4,0,104,0,99,4,17,104,0,99,0,0,1101,0,26,1014,1102,1,30,1013,1101,22,0,1000,1101,0,35,1015,1101,0,34,1011,1102,0,1,1020,1102,1,481,1022,1101,0,36,1003,1102,1,28,1005,1101,857,0,1024,1101,20,0,1008,1101,0,385,1026,1102,37,1,1006,1101,33,0,1017,1101,0,38,1002,1102,23,1,1007,1102,32,1,1010,1101,29,0,1016,1102,1,25,1009,1102,1,27,1012,1101,24,0,1018,1101,474,0,1023,1102,1,39,1004,1101,0,31,1001,1102,378,1,1027,1101,0,848,1025,1102,21,1,1019,1102,760,1,1029,1102,1,1,1021,1101,769,0,1028,109,-6,2107,21,6,63,1005,63,199,4,187,1106,0,203,1001,64,1,64,1002,64,2,64,109,16,2101,0,-6,63,1008,63,39,63,1005,63,225,4,209,1106,0,229,1001,64,1,64,1002,64,2,64,109,5,2108,20,-7,63,1005,63,247,4,235,1105,1,251,1001,64,1,64,1002,64,2,64,109,-1,2108,36,-8,63,1005,63,267,1106,0,273,4,257,1001,64,1,64,1002,64,2,64,109,-13,1201,-1,0,63,1008,63,22,63,1005,63,299,4,279,1001,64,1,64,1106,0,299,1002,64,2,64,109,15,2102,1,-8,63,1008,63,20,63,1005,63,321,4,305,1106,0,325,1001,64,1,64,1002,64,2,64,109,-13,21108,40,40,8,1005,1011,347,4,331,1001,64,1,64,1105,1,347,1002,64,2,64,109,-2,1207,8,24,63,1005,63,363,1105,1,369,4,353,1001,64,1,64,1002,64,2,64,109,35,2106,0,-9,1001,64,1,64,1106,0,387,4,375,1002,64,2,64,109,-26,21102,41,1,3,1008,1013,41,63,1005,63,409,4,393,1106,0,413,1001,64,1,64,1002,64,2,64,109,2,1202,-6,1,63,1008,63,36,63,1005,63,433,1106,0,439,4,419,1001,64,1,64,1002,64,2,64,109,-3,21102,42,1,10,1008,1019,40,63,1005,63,463,1001,64,1,64,1106,0,465,4,445,1002,64,2,64,109,15,2105,1,-1,1001,64,1,64,1106,0,483,4,471,1002,64,2,64,109,-27,1207,3,23,63,1005,63,505,4,489,1001,64,1,64,1105,1,505,1002,64,2,64,109,13,2102,1,-9,63,1008,63,28,63,1005,63,525,1105,1,531,4,511,1001,64,1,64,1002,64,2,64,109,1,2101,0,-8,63,1008,63,35,63,1005,63,551,1105,1,557,4,537,1001,64,1,64,1002,64,2,64,109,6,21107,43,44,-4,1005,1013,575,4,563,1106,0,579,1001,64,1,64,1002,64,2,64,109,-9,1201,-4,0,63,1008,63,40,63,1005,63,599,1105,1,605,4,585,1001,64,1,64,1002,64,2,64,109,12,1206,1,621,1001,64,1,64,1106,0,623,4,611,1002,64,2,64,109,-22,1202,9,1,63,1008,63,23,63,1005,63,649,4,629,1001,64,1,64,1105,1,649,1002,64,2,64,109,17,1206,5,667,4,655,1001,64,1,64,1106,0,667,1002,64,2,64,109,-3,1205,9,685,4,673,1001,64,1,64,1106,0,685,1002,64,2,64,109,3,1208,-9,37,63,1005,63,707,4,691,1001,64,1,64,1105,1,707,1002,64,2,64,109,7,1205,-2,723,1001,64,1,64,1106,0,725,4,713,1002,64,2,64,109,-15,21101,44,0,8,1008,1015,45,63,1005,63,745,1105,1,751,4,731,1001,64,1,64,1002,64,2,64,109,28,2106,0,-7,4,757,1001,64,1,64,1106,0,769,1002,64,2,64,109,-12,21101,45,0,-5,1008,1018,45,63,1005,63,791,4,775,1105,1,795,1001,64,1,64,1002,64,2,64,109,-9,2107,26,-5,63,1005,63,815,1001,64,1,64,1106,0,817,4,801,1002,64,2,64,109,-1,21107,46,45,-3,1005,1010,833,1105,1,839,4,823,1001,64,1,64,1002,64,2,64,109,3,2105,1,8,4,845,1001,64,1,64,1106,0,857,1002,64,2,64,109,-9,1208,-4,37,63,1005,63,877,1001,64,1,64,1105,1,879,4,863,1002,64,2,64,109,8,21108,47,46,2,1005,1017,895,1106,0,901,4,885,1001,64,1,64,4,64,99,21102,1,27,1,21102,1,915,0,1106,0,922,21201,1,14429,1,204,1,99,109,3,1207,-2,3,63,1005,63,964,21201,-2,-1,1,21102,1,942,0,1105,1,922,21202,1,1,-1,21201,-2,-3,1,21101,957,0,0,1106,0,922,22201,1,-1,-2,1105,1,968,21201,-2,0,-2,109,-3,2105,1,0
+    std::vector<int64_t> input = { 1102,34463338,34463338,63,1007,63,34463338,63,1005,63,53,1102,3,1,1000,109,988,209,12,9,1000,209,6,209,3,203,0,1008,1000,1,63,1005,63,65,1008,1000,2,63,1005,63,904,1008,1000,0,63,1005,63,58,4,25,104,0,99,4,0,104,0,99,4,17,104,0,99,0,0,1101,0,26,1014,1102,1,30,1013,1101,22,0,1000,1101,0,35,1015,1101,0,34,1011,1102,0,1,1020,1102,1,481,1022,1101,0,36,1003,1102,1,28,1005,1101,857,0,1024,1101,20,0,1008,1101,0,385,1026,1102,37,1,1006,1101,33,0,1017,1101,0,38,1002,1102,23,1,1007,1102,32,1,1010,1101,29,0,1016,1102,1,25,1009,1102,1,27,1012,1101,24,0,1018,1101,474,0,1023,1102,1,39,1004,1101,0,31,1001,1102,378,1,1027,1101,0,848,1025,1102,21,1,1019,1102,760,1,1029,1102,1,1,1021,1101,769,0,1028,109,-6,2107,21,6,63,1005,63,199,4,187,1106,0,203,1001,64,1,64,1002,64,2,64,109,16,2101,0,-6,63,1008,63,39,63,1005,63,225,4,209,1106,0,229,1001,64,1,64,1002,64,2,64,109,5,2108,20,-7,63,1005,63,247,4,235,1105,1,251,1001,64,1,64,1002,64,2,64,109,-1,2108,36,-8,63,1005,63,267,1106,0,273,4,257,1001,64,1,64,1002,64,2,64,109,-13,1201,-1,0,63,1008,63,22,63,1005,63,299,4,279,1001,64,1,64,1106,0,299,1002,64,2,64,109,15,2102,1,-8,63,1008,63,20,63,1005,63,321,4,305,1106,0,325,1001,64,1,64,1002,64,2,64,109,-13,21108,40,40,8,1005,1011,347,4,331,1001,64,1,64,1105,1,347,1002,64,2,64,109,-2,1207,8,24,63,1005,63,363,1105,1,369,4,353,1001,64,1,64,1002,64,2,64,109,35,2106,0,-9,1001,64,1,64,1106,0,387,4,375,1002,64,2,64,109,-26,21102,41,1,3,1008,1013,41,63,1005,63,409,4,393,1106,0,413,1001,64,1,64,1002,64,2,64,109,2,1202,-6,1,63,1008,63,36,63,1005,63,433,1106,0,439,4,419,1001,64,1,64,1002,64,2,64,109,-3,21102,42,1,10,1008,1019,40,63,1005,63,463,1001,64,1,64,1106,0,465,4,445,1002,64,2,64,109,15,2105,1,-1,1001,64,1,64,1106,0,483,4,471,1002,64,2,64,109,-27,1207,3,23,63,1005,63,505,4,489,1001,64,1,64,1105,1,505,1002,64,2,64,109,13,2102,1,-9,63,1008,63,28,63,1005,63,525,1105,1,531,4,511,1001,64,1,64,1002,64,2,64,109,1,2101,0,-8,63,1008,63,35,63,1005,63,551,1105,1,557,4,537,1001,64,1,64,1002,64,2,64,109,6,21107,43,44,-4,1005,1013,575,4,563,1106,0,579,1001,64,1,64,1002,64,2,64,109,-9,1201,-4,0,63,1008,63,40,63,1005,63,599,1105,1,605,4,585,1001,64,1,64,1002,64,2,64,109,12,1206,1,621,1001,64,1,64,1106,0,623,4,611,1002,64,2,64,109,-22,1202,9,1,63,1008,63,23,63,1005,63,649,4,629,1001,64,1,64,1105,1,649,1002,64,2,64,109,17,1206,5,667,4,655,1001,64,1,64,1106,0,667,1002,64,2,64,109,-3,1205,9,685,4,673,1001,64,1,64,1106,0,685,1002,64,2,64,109,3,1208,-9,37,63,1005,63,707,4,691,1001,64,1,64,1105,1,707,1002,64,2,64,109,7,1205,-2,723,1001,64,1,64,1106,0,725,4,713,1002,64,2,64,109,-15,21101,44,0,8,1008,1015,45,63,1005,63,745,1105,1,751,4,731,1001,64,1,64,1002,64,2,64,109,28,2106,0,-7,4,757,1001,64,1,64,1106,0,769,1002,64,2,64,109,-12,21101,45,0,-5,1008,1018,45,63,1005,63,791,4,775,1105,1,795,1001,64,1,64,1002,64,2,64,109,-9,2107,26,-5,63,1005,63,815,1001,64,1,64,1106,0,817,4,801,1002,64,2,64,109,-1,21107,46,45,-3,1005,1010,833,1105,1,839,4,823,1001,64,1,64,1002,64,2,64,109,3,2105,1,8,4,845,1001,64,1,64,1106,0,857,1002,64,2,64,109,-9,1208,-4,37,63,1005,63,877,1001,64,1,64,1105,1,879,4,863,1002,64,2,64,109,8,21108,47,46,2,1005,1017,895,1106,0,901,4,885,1001,64,1,64,4,64,99,21102,1,27,1,21102,1,915,0,1106,0,922,21201,1,14429,1,204,1,99,109,3,1207,-2,3,63,1005,63,964,21201,-2,-1,1,21102,1,942,0,1105,1,922,21202,1,1,-1,21201,-2,-3,1,21101,957,0,0,1106,0,922,22201,1,-1,-2,1105,1,968,21201,-2,0,-2,109,-3,2105,1,0
     };
 
-    input = { 109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99 };
+    //input = { 104,1125899906842624,99 };
     IntCodeComputer pc(input);
     pc.runTests(1);
+    //sanity checks
+    // pc.runTests(7);
+    // pc.setMemory(input);
+    // pc.updateInstructionPointerPosition(0);
+    // pc.runTests(8);
+    // pc.setMemory(input);
+    // pc.updateInstructionPointerPosition(0);
+    // pc.runTests(9);
+
+    // input = {3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9};
+    // pc.setMemory(input);
+    // pc.updateInstructionPointerPosition(0);
+    // pc.runTests(0);
+    // pc.setMemory(input);
+    // pc.updateInstructionPointerPosition(0);
+    // pc.runTests(3);
+    // pc.setMemory(input);
+    // pc.updateInstructionPointerPosition(0);
+    // pc.runTests(0);
+
+    // input ={3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99};
+    // pc.setMemory(input);
+    // pc.updateInstructionPointerPosition(0);
+    // pc.runTests(7);
+    // pc.setMemory(input);
+    // pc.updateInstructionPointerPosition(0);
+    // pc.runTests(8);
+    // pc.setMemory(input);
+    // pc.updateInstructionPointerPosition(0);
+    // pc.runTests(9);
 
     return 0;
 }
