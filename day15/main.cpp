@@ -187,7 +187,8 @@ namespace {
                     answer = val;
                     if (shallOutputBreakExecution)
                         shouldBrake = true;
-                    std::cout << val << ',' << ' ';
+                    //std::cout << val << ',' << ' ';
+                    if (val == 2) std::cout << val;
                     ip += 2;
                     ++counter;
                     break;
@@ -345,38 +346,17 @@ namespace {
         void explore() {
             auto param = NORTH;
             map.insert({ 0,0 });
-            //auto result = pc.run(param);
-            makeMove(NORTH, -1, 0);
-            pc.run(getOpositeDirection(NORTH));
-            makeMove(SOUTH, 0, 1);
-            pc.run(getOpositeDirection(SOUTH));
-            makeMove(EAST, 0, 1);
-            pc.run(getOpositeDirection(EAST));
-            makeMove(WEST, 0, -1);
-            pc.run(getOpositeDirection(WEST));
+            makeMove(NORTH, 0, 0);
+            makeMove(SOUTH, 0, 0);
+            makeMove(EAST, 0, 0);
+            makeMove(WEST, 0, 0);
         }
 
 private:
     void makeMove(int direction, int x, int y) {
         std::stack<int> moves;
         std::queue<int> q;
-        const auto type = pc.run(direction);
-
-        if (type == 0) {
-            //wall
-            map.insert({ x,y,type });
-            return;
-        }
-        else if (map.count({ x,y, type }) > 0) {
-            //been here already
-            return;
-        }
-
-        map.insert({ x,y,type });
-        q.push(NORTH);
-        q.push(SOUTH);
-        q.push(EAST);
-        q.push(WEST);
+        q.push(direction);
 
         auto current_x = x;
         auto current_y = y;
@@ -387,38 +367,22 @@ private:
 
             auto [x_, y_] = getNewPositions(newDirection, current_x, current_y);
             const auto type = pc.run(newDirection);
-
-            if (type == 0) {
-                pc.run(getOpositeDirection(newDirection));
+            if (auto [it, isInserted] = map.insert({ x_,y_,type }); !isInserted) {
+                //been here already
                 continue;
             }
-            else if (map.count({ x,y, type }) > 0) {
-                pc.run(getOpositeDirection(newDirection));
-                continue;
+            if (type != 0) {
+                moves.push(getOpositeDirection(newDirection));
+                current_x = x_;
+                current_y = y_;
             }
-            map.insert({ x_, y_, type });
-            moves.push(newDirection);
-            current_x = x_;
-            current_y = y_;
-            q.push(NORTH);
-            q.push(SOUTH);
-            q.push(EAST);
-            q.push(WEST);
+            if (type != 0) {
+                    q.push(NORTH);
+                    q.push(SOUTH);
+                    q.push(EAST);
+                    q.push(WEST);
+            }
         }
-
-        // moves.push(NORTH);
-        // makeMove(NORTH, x - 1, y);
-
-        // moves.push(SOUTH);
-        // makeMove(SOUTH, x + 1, y);
-
-        // moves.push(EAST);
-        // makeMove(EAST, x, y + 1);
-
-        // moves.push(WEST);
-        // makeMove(WEST, x, y - 1);
-
-
         while (!moves.empty()) {
             pc.run(moves.top());
             moves.pop();
@@ -438,37 +402,6 @@ private:
         if (direction == WEST) return EAST;
         assert(false);
         return 0;
-    }
-
-    std::pair<bool, Point> checkTileToTheLeft() {
-        return checkTile(WEST, EAST);
-    }
-
-    std::pair<bool, Point> checkTileToTheRight() {
-        return checkTile(EAST, WEST);
-    }
-
-    std::pair<bool, Point> checkTile(int firstDirection, int secondDirection) {
-        //check whether next tile isn't already parsed
-        const auto y = firstDirection == WEST ? -1 : 1;
-        if (firstDirection == WEST) {
-            //going left, y -= 1
-            if (map.count({ currentPosition.x, y }) > 0)
-                return { false, Point{} };
-        }
-        else if (firstDirection == EAST) {
-            //going right, y += 1
-            if (map.count({ currentPosition.x, y }) > 0)
-                return { false, Point{} };
-        }
-        const auto res = pc.run(firstDirection);
-        pc.run(secondDirection);
-        if (res == 0) {
-            return { false, Point{} };
-        }
-        else {
-            return { true, Point{currentPosition.x, y} };
-        }
     }
 
     IntCodeComputer pc;
