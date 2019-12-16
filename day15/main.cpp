@@ -356,89 +356,126 @@ namespace {
             pc.run(getOpositeDirection(WEST));
         }
 
-    private:
-        void makeMove(int direction, int x, int y) {
-            std::stack<int> moves;
-            std::queue<int> queue;
-            const auto type = pc.run(direction);
+private:
+    void makeMove(int direction, int x, int y) {
+        std::stack<int> moves;
+        std::queue<int> q;
+        const auto type = pc.run(direction);
+
+        if (type == 0) {
+            //wall
+            map.insert({ x,y,type });
+            return;
+        }
+        else if (map.count({ x,y, type }) > 0) {
+            //been here already
+            return;
+        }
+
+        map.insert({ x,y,type });
+        q.push(NORTH);
+        q.push(SOUTH);
+        q.push(EAST);
+        q.push(WEST);
+
+        auto current_x = x;
+        auto current_y = y;
+
+        while(!q.empty()) {
+            const auto newDirection = q.front();
+            q.pop();
+
+            auto [x_, y_] = getNewPositions(newDirection, current_x, current_y);
+            const auto type = pc.run(newDirection);
 
             if (type == 0) {
-                //wall
-                map.insert({ x,y,type });
-                return;
+                pc.run(getOpositeDirection(newDirection));
+                continue;
             }
             else if (map.count({ x,y, type }) > 0) {
-                //been here already
-                return;
+                pc.run(getOpositeDirection(newDirection));
+                continue;
             }
-
-            map.insert({ x,y,type });
-
-
-            moves.push(NORTH);
-            makeMove(NORTH, x - 1, y);
-
-            moves.push(SOUTH);
-            makeMove(SOUTH, x + 1, y);
-
-            moves.push(EAST);
-            makeMove(EAST, x, y + 1);
-
-            moves.push(WEST);
-            makeMove(WEST, x, y - 1);
-
-
-            while (!moves.empty()) {
-                pc.run(moves.top());
-                moves.pop();
-            }
+            map.insert({ x_, y_, type });
+            moves.push(newDirection);
+            current_x = x_;
+            current_y = y_;
+            q.push(NORTH);
+            q.push(SOUTH);
+            q.push(EAST);
+            q.push(WEST);
         }
 
-        int getOpositeDirection(int direction) {
-            if (direction == NORTH) return SOUTH;
-            if (direction == SOUTH) return NORTH;
-            if (direction == EAST) return WEST;
-            if (direction == WEST) return EAST;
-            assert(false);
-            return 0;
-        }
+        // moves.push(NORTH);
+        // makeMove(NORTH, x - 1, y);
 
-        std::pair<bool, Point> checkTileToTheLeft() {
-            return checkTile(WEST, EAST);
-        }
+        // moves.push(SOUTH);
+        // makeMove(SOUTH, x + 1, y);
 
-        std::pair<bool, Point> checkTileToTheRight() {
-            return checkTile(EAST, WEST);
-        }
+        // moves.push(EAST);
+        // makeMove(EAST, x, y + 1);
 
-        std::pair<bool, Point> checkTile(int firstDirection, int secondDirection) {
-            //check whether next tile isn't already parsed
-            const auto y = firstDirection == WEST ? -1 : 1;
-            if (firstDirection == WEST) {
-                //going left, y -= 1
-                if (map.count({ currentPosition.x, y }) > 0)
-                    return { false, Point{} };
-            }
-            else if (firstDirection == EAST) {
-                //going right, y += 1
-                if (map.count({ currentPosition.x, y }) > 0)
-                    return { false, Point{} };
-            }
-            const auto res = pc.run(firstDirection);
-            pc.run(secondDirection);
-            if (res == 0) {
+        // moves.push(WEST);
+        // makeMove(WEST, x, y - 1);
+
+
+        while (!moves.empty()) {
+            pc.run(moves.top());
+            moves.pop();
+        }
+    }
+
+    std::pair<int, int> getNewPositions (int direction, int x, int y) {
+        if (direction == NORTH) return {x-1, y};
+        if (direction == SOUTH) return {x+1, y};
+        if (direction == EAST) return {x, y+1};
+        if (direction == WEST) return {x, y-1};
+    }
+    int getOpositeDirection(int direction) {
+        if (direction == NORTH) return SOUTH;
+        if (direction == SOUTH) return NORTH;
+        if (direction == EAST) return WEST;
+        if (direction == WEST) return EAST;
+        assert(false);
+        return 0;
+    }
+
+    std::pair<bool, Point> checkTileToTheLeft() {
+        return checkTile(WEST, EAST);
+    }
+
+    std::pair<bool, Point> checkTileToTheRight() {
+        return checkTile(EAST, WEST);
+    }
+
+    std::pair<bool, Point> checkTile(int firstDirection, int secondDirection) {
+        //check whether next tile isn't already parsed
+        const auto y = firstDirection == WEST ? -1 : 1;
+        if (firstDirection == WEST) {
+            //going left, y -= 1
+            if (map.count({ currentPosition.x, y }) > 0)
                 return { false, Point{} };
-            }
-            else {
-                return { true, Point{currentPosition.x, y} };
-            }
         }
+        else if (firstDirection == EAST) {
+            //going right, y += 1
+            if (map.count({ currentPosition.x, y }) > 0)
+                return { false, Point{} };
+        }
+        const auto res = pc.run(firstDirection);
+        pc.run(secondDirection);
+        if (res == 0) {
+            return { false, Point{} };
+        }
+        else {
+            return { true, Point{currentPosition.x, y} };
+        }
+    }
 
-        IntCodeComputer pc;
-        std::set<Point> map;
-        std::set<Point> points_to_visit;
-        Point currentPosition;
-    };
+    IntCodeComputer pc;
+    std::set<Point> map;
+    std::set<Point> points_to_visit;
+    Point currentPosition;
+};
 }
 
 int main()
