@@ -69,7 +69,8 @@ namespace {
         bool isDebugEnabled{ true };
         bool shallOutputBreakExecution{ true };
 
-
+    public:
+    std::queue<int> instructions;
     public:
         IntCodeComputer(std::vector<int64_t> const& mem) : memory(mem) {
             for (auto i = 0; i < 100 * 100 * 100; ++i)
@@ -158,7 +159,9 @@ namespace {
                 }
                 case OpCodes::STORE: {
                     const auto pos = getIndex(mode1, memory[ip + 1]);
-                    const auto val = onceParam ? *onceParam : param;
+                    //const auto val = onceParam ? *onceParam : param;
+                    const auto val = instructions.front();
+                    instructions.pop();
                     if (isDebugEnabled)
                         std::cout << "ip: " << ip << " STORE"
                         << " (" << val << ", " << mode1 << ")"
@@ -182,7 +185,7 @@ namespace {
                     answer = val;
                     if (shallOutputBreakExecution)
                         shouldBrake = true;
-                    //std::cout << val << ',' << ' ';
+                    std::cout << val << ',' << ' ';
                     ip += 2;
                     ++counter;
                     break;
@@ -339,23 +342,70 @@ int main()
 
     IntCodeComputer pc(input);
     pc.disableDebug();
-    std::vector<std::vector<char>> map;
-    map.push_back(std::vector<char>());
+    // std::vector<std::vector<char>> map;
+    // map.push_back(std::vector<char>());
+    // while(true) {
+    //     auto [val, opCode, _] = pc.run(0);
+    //     if (val == 10) map.push_back(std::vector<char>());
+    //     else {
+    //         map.back().push_back(static_cast<char>(val));
+    //     }
+    //     if (opCode == OpCodes::STOP) break;
+    // }
+
+    // for (auto& line: map) {
+    //     for (auto ch: line) {
+    //         std::cout << ch << ' ';
+    //     }
+    //     std::cout << '\n';
+    // }
+    // std::cout << '\n';
+    pc.updateMemoryLocation(0,2);
+    const std::string s = "A,B,A,C,B,A,C,B,A,C\n";
+    const auto ss = {65,44,66,44,65,44,67,44,66,44,65,44,67,44,66,44,65,44,67,10};
+    const std::string A = "L,6,L,4,R,12\n";
+    const auto aa = {76,44,54,44,76,44,52,44,82,44,49,50,10};
+    const std::string B = "L,6,R,12,R,12,L,8\n";
+    const auto bb = {76,44,54,44,82,44,49,50,44,82,44,49,50,44,76,44,56,10};
+    const std::string C = "L,6,L,10,L,10,L,6\n";
+    const auto cc = {76,44,54,44,76,44,49,48,44,76,44,49,48,44,76,44,54,10};
+    for (auto ch: ss) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: aa) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: bb) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: aa) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: cc) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: bb) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: aa) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: cc) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: bb) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: aa) {
+        pc.instructions.push(ch);
+    }
+    for (auto ch: cc) {
+        pc.instructions.push(ch);
+    }
     while(true) {
-        auto [val, opCode, _] = pc.run(0);
-        if (val == 10) map.push_back(std::vector<char>());
-        else {
-            map.back().push_back(static_cast<char>(val));
-        }
+        auto opCode = std::get<1>(pc.run(0));
         if (opCode == OpCodes::STOP) break;
     }
-
-    for (auto& line: map) {
-        for (auto ch: line) {
-            std::cout << ch << ' ';
-        }
-        std::cout << '\n';
-    }
-    std::cout << '\n';
+//L,6,L,4,R,12,L,6,R,12,R,12,L,8,L,6,L,4,R,12,L,6,L,10,L,10,L,6,L,6,R,12,R,12,L,8,L,6,L,4,R,12,L,6,L,10,L,10,L,6,L,6,R,12,R,12,L,8,L,6,L,4,R,12,L,6,L,10,L,10,L,6,
     return 0;
 }
