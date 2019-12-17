@@ -378,34 +378,15 @@ int main()
     for (auto ch: bb) {
         pc.instructions.push(ch);
     }
-    for (auto ch: aa) {
-        pc.instructions.push(ch);
-    }
+
     for (auto ch: cc) {
         pc.instructions.push(ch);
     }
-    for (auto ch: bb) {
-        pc.instructions.push(ch);
-    }
-    for (auto ch: aa) {
-        pc.instructions.push(ch);
-    }
-    for (auto ch: cc) {
-        pc.instructions.push(ch);
-    }
-    for (auto ch: bb) {
-        pc.instructions.push(ch);
-    }
-    for (auto ch: aa) {
-        pc.instructions.push(ch);
-    }
-    for (auto ch: cc) {
-        pc.instructions.push(ch);
-    }
+
+    for (auto ch : { 110,10 }) pc.instructions.push(ch);
     while(true) {
         auto opCode = std::get<1>(pc.run(0));
         if (opCode == OpCodes::STOP) break;
     }
-//L,6,L,4,R,12,L,6,R,12,R,12,L,8,L,6,L,4,R,12,L,6,L,10,L,10,L,6,L,6,R,12,R,12,L,8,L,6,L,4,R,12,L,6,L,10,L,10,L,6,L,6,R,12,R,12,L,8,L,6,L,4,R,12,L,6,L,10,L,10,L,6,
     return 0;
 }
