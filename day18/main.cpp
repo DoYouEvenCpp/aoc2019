@@ -17,24 +17,33 @@
 #include <fstream>
 
 namespace {
-    const auto loadData = [](auto path){
-        std::vector<char> out;
-        {
-            using namespace std;
-            char ch;
-            fstream fs(path, fstream::in);
-            while (fs >> ch) {
-                out.push_back(ch);
+const auto loadData = [](auto path){
+    std::vector<std::vector<char>> res;
+    {
+        char ch;
+        std::fstream fs(path, std::fstream::in);
+        res.push_back({});
+        while (fs.get(ch)) {
+            if(ch == '\n') {
+                res.back().push_back(ch);
+                res.push_back({});
             }
-            fs.close();
+            else {
+                res.back().push_back(ch);
+            }
         }
-        return out;
-    };
-    const auto printData = [](auto& data) {
-        for (auto ch: data)
-            std::cout << ch << ' ';
-        std::cout << '\n';
-    };
+        fs.close();
+    }
+    return res;
+};
+const auto printData = [](auto& data) {
+    for (auto& line: data) {
+        for (auto ch: line)
+            std::cout << ch;
+    }
+};
+const auto getInitialPosition = [](auto& data) {
+};
 }
 
 int main(int argc, char** argv)
