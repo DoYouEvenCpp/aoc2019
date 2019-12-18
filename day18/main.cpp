@@ -14,9 +14,14 @@
 #include <stack>
 #include <cassert>
 #include <queue>
+#include <list>
 #include <fstream>
 
 namespace {
+struct Position {
+    int x;
+    int y;
+};
 const auto loadData = [](auto path){
     std::vector<std::vector<char>> res;
     {
@@ -42,7 +47,19 @@ const auto printData = [](auto& data) {
             std::cout << ch;
     }
 };
-const auto getInitialPosition = [](auto& data) {
+const auto getInitialPosition = [](auto& data) -> Position {
+    for (auto i = 0; i < data.size(); ++i)
+        for (auto j = 0; j < data[i].size(); ++j)
+            if (data[i][j] == '@') return {i, y};
+    return {};
+};
+
+const auto searchPossibleMovesFromPosition = [](auto& input, Position pos) -> std::list<Position> {
+    return {};
+};
+
+const auto getAccessibleKeys = [](auto& input, Position pos) -> std::map<char, Position> {
+    return {};
 };
 }
 
@@ -56,5 +73,6 @@ int main(int argc, char** argv)
     const std::string path = argv[1];
     const auto input = loadData(path);
     printData(input);
+    auto pos = getInitialPosition(input);
     return 0;
 }
