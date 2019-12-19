@@ -335,10 +335,19 @@ namespace {
         RIGHT
     };
 
+const auto dumpDirection = [](Direction d) {
+    switch (d) {
+    case Direction::UP: return "UP";
+    case Direction::DOWN: return "DOWN";
+    case Direction::LEFT: return "LEFT";
+    case Direction::RIGHT: return "RIGHT";
+    }
+};
+
     struct Position {
         int x;
         int y;
-        int colour;
+        //int colour;
         bool operator<(Position const& p) const {
             if (p.x < x) return true;
             if (p.x == x) {
@@ -349,38 +358,67 @@ namespace {
     };
 
 struct PaintingRobot {
-    PaintingRobot(IntCodeComputer c) : pc(c), current_direction(Direction::UP), current_tile({ 0,0,BLACK })
+    PaintingRobot(IntCodeComputer c) : pc(c),
+        current_direction(Direction::UP),
+        current_position({ 0,0 }),
+        current_colour(BLACK)
     {
-        //pc.disableDebug();
+        pc.disableDebug();
     }
 
     void run() {
-        map.insert(current_tile);
         int counter = 0;
         while (true) {
-            //fetch currentTile's colour
-            //run robot
-            //parse output
-            //update current tile's colour
-            //calculate new position
-            //update current direction
+            const auto [new_colour, new_direction, op_code] = pc.run(current_colour);
+            const auto new_pos = updateCurrentDirectionGetNewPosition(new_direction);
+            
+            
+            if (!map.contains(current_position)) {
+                ++counter;
+            } else if (map[current_position] != new_colour) ++counter;
 
-            //REFACTOR
+            map[current_position] = new_colour;
 
-            const auto current_colour = current_tile.colour;
-            // const auto [new_colour, new_direction, op_code] = pc.run(current_colour);
-            // if (current_colour != new_colour) counter++;
-            // current_tile.colour = new_colour;
-            // current_tile = handleNewPosition(new_direction);
+            current_position = new_pos;
+            //current_colour = new_colour;
+            if (map.contains(current_position))
+                current_colour = map[current_position];
+            else 
+               current_colour = BLACK;
 
-            // if (op_code == OpCodes::STOP) break;
+            if (op_code == OpCodes::STOP) break;
         }
         std::cout << "painted: " << counter << std::endl;
+
+        //auto min_x = -1;
+        //auto min_y = -1;
+        //auto max_x = 1;
+        //auto max_y = 1;
+        std::array<std::array<int, 76>, 58> image{};
+        for (auto& e : map) {
+            /*if (e.first.x < min_x) min_x = e.first.x;
+            if (e.first.x > max_x) max_x = e.first.x;
+
+            if (e.first.y < min_y) min_y = e.first.y;
+            if (e.first.y > max_y) max_y = e.first.y;*/
+            image[e.first.y + 4][e.first.x + 44] = e.second;
+        }
+
+        for (auto i = 0; i < 75; ++i) {
+            for (auto j = 0; j < 57; ++j) {
+                if (image[i][j] == 0) std::cout << "X ";
+                else if (image[i][j] == 1) std::cout << ". ";
+                else std::cout << "? ";
+            }
+            std::cout << '\n';
+        }
+        //std::cout << "min_x: " << min_x << " max_x: " << max_x << "\tmin_y: " << min_y << " max_y: " << max_y;
+
     }
 
 private:
-    Position handleNewPosition(int newDirection) {
-        Position newPos{ current_tile.x, current_tile.y, BLACK};
+    Position updateCurrentDirectionGetNewPosition(int newDirection) {
+        Position newPos{ current_position.x, current_position.y};
         switch (current_direction) {
         case Direction::UP: {
             if (newDirection == TURN_LEFT) {
@@ -428,17 +466,20 @@ private:
         }
         }
 
-        if (auto [it, isInserted] = map.insert(newPos); !isInserted) {
+       /* if (auto [it, isInserted] = map.insert(newPos); !isInserted) {
             newPos.colour = it->colour;
-        }
+        }*/
         return newPos;
     }
 
 private:
     IntCodeComputer pc;
     Direction current_direction;
-    Position current_tile;
-    std::set<Position> map;
+    Position current_position;
+    int current_colour;
+    //std::set<Position> map;
+    std::map<Position, int> map;
+    std::list<Position> painted;
 };
 }
 
