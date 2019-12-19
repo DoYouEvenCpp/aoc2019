@@ -344,24 +344,39 @@ const auto dumpDirection = [](Direction d) {
     }
 };
 
-    struct Position {
-        int x;
-        int y;
-        //int colour;
-        bool operator<(Position const& p) const {
-            if (p.x < x) return true;
-            if (p.x == x) {
-                return p.y < y;
-            }
-            return false;
+struct Position {
+    int x;
+    int y;
+    bool operator<(Position const& p) const {
+        if (p.x < x) return true;
+        if (p.x == x) {
+            return p.y < y;
         }
-    };
+        return false;
+    }
+};
+
+const auto getMinMaxXY = [](auto& map) {
+    auto min_x = -1;
+    auto max_y = 1;
+    auto min_y = -1;
+    auto max_x = 1;
+    std::array<std::array<int, 44>, 7> image{};
+    for (auto& e : map) {
+        max_x = std::max(e.first.x, max_x);
+        min_x = std::min(e.first.x, min_x);
+
+        max_y = std::max(e.first.y, max_y);
+        min_y = std::min(e.first.y, min_y);
+    }
+    return std::make_tuple(min_x, max_x, min_y, max_y);
+};
 
 struct PaintingRobot {
     PaintingRobot(IntCodeComputer c) : pc(c),
         current_direction(Direction::UP),
         current_position({ 0,0 }),
-        current_colour(BLACK)
+        current_colour(WHITE)
     {
         pc.disableDebug();
     }
@@ -372,15 +387,14 @@ struct PaintingRobot {
             const auto [new_colour, new_direction, op_code] = pc.run(current_colour);
             const auto new_pos = updateCurrentDirectionGetNewPosition(new_direction);
             
-            
-            if (!map.contains(current_position)) {
+            if (!map.contains(current_position))
                 ++counter;
-            } else if (map[current_position] != new_colour) ++counter;
+            else if (map[current_position] != new_colour)
+                ++counter;
 
             map[current_position] = new_colour;
 
             current_position = new_pos;
-            //current_colour = new_colour;
             if (map.contains(current_position))
                 current_colour = map[current_position];
             else 
@@ -390,30 +404,29 @@ struct PaintingRobot {
         }
         std::cout << "painted: " << counter << std::endl;
 
-        //auto min_x = -1;
-        //auto min_y = -1;
-        //auto max_x = 1;
-        //auto max_y = 1;
-        std::array<std::array<int, 76>, 58> image{};
-        for (auto& e : map) {
-            /*if (e.first.x < min_x) min_x = e.first.x;
-            if (e.first.x > max_x) max_x = e.first.x;
 
-            if (e.first.y < min_y) min_y = e.first.y;
-            if (e.first.y > max_y) max_y = e.first.y;*/
-            image[e.first.y + 4][e.first.x + 44] = e.second;
+        auto [min_x, max_x, min_y, max_y] = getMinMaxXY(map);
+        const auto X_LIMIT = std::abs(min_x) + max_x + 1;
+        const auto Y_LIMIT = std::abs(min_y) + max_y + 1;
+        std::vector<std::vector<int>> image;
+        for (auto i = 0; i < X_LIMIT; ++i) {
+            image.push_back({});
+            for (auto j = 0; j < Y_LIMIT; ++j) {
+                image.back().push_back(0);
+            }
+        }
+        for (auto& e : map) {
+            image[e.first.x + 1][e.first.y + 1] = e.second;
         }
 
-        for (auto i = 0; i < 75; ++i) {
-            for (auto j = 0; j < 57; ++j) {
-                if (image[i][j] == 0) std::cout << "X ";
-                else if (image[i][j] == 1) std::cout << ". ";
-                else std::cout << "? ";
+        for (auto i = 0; i < 7; ++i) {
+            for (auto j = 0; j < 44; ++j) {
+                if (image[i][j] == 0) std::cout << ' ';
+                else if (image[i][j] == 1) std::cout << '@';
+                else std::cout << '?';
             }
             std::cout << '\n';
         }
-        //std::cout << "min_x: " << min_x << " max_x: " << max_x << "\tmin_y: " << min_y << " max_y: " << max_y;
-
     }
 
 private:
@@ -422,53 +435,50 @@ private:
         switch (current_direction) {
         case Direction::UP: {
             if (newDirection == TURN_LEFT) {
-                newPos.x -= 1;
+                newPos.y -= 1;
                 current_direction = Direction::LEFT;
             }
             else if (newDirection == TURN_RIGHT) {
-                newPos.x += 1;
+                newPos.y += 1;
                 current_direction = Direction::RIGHT;
             }
             break;
         }
         case Direction::DOWN: {
             if (newDirection == TURN_LEFT) {
-                newPos.x += 1;
+                newPos.y += 1;
                 current_direction = Direction::RIGHT;
             }
             else if (newDirection == TURN_RIGHT) {
-                newPos.x -= 1;
+                newPos.y -= 1;
                 current_direction = Direction::LEFT;
             }
             break;
         }
         case Direction::LEFT: {
             if (newDirection == TURN_LEFT) {
-                newPos.y += 1;
+                newPos.x += 1;
                 current_direction = Direction::DOWN;
             }
             else if (newDirection == TURN_RIGHT) {
-                newPos.y -= 1;
+                newPos.x -= 1;
                 current_direction = Direction::UP;
             }
             break;
         }
         case Direction::RIGHT: {
             if (newDirection == TURN_LEFT) {
-                newPos.y -= 1;
+                newPos.x -= 1;
                 current_direction = Direction::UP;
             }
             else if (newDirection == TURN_RIGHT) {
-                newPos.y += 1;
+                newPos.x += 1;
                 current_direction = Direction::DOWN;
             }
             break;
         }
         }
 
-       /* if (auto [it, isInserted] = map.insert(newPos); !isInserted) {
-            newPos.colour = it->colour;
-        }*/
         return newPos;
     }
 
@@ -477,7 +487,7 @@ private:
     Direction current_direction;
     Position current_position;
     int current_colour;
-    //std::set<Position> map;
+
     std::map<Position, int> map;
     std::list<Position> painted;
 };
@@ -491,7 +501,5 @@ int main()
     IntCodeComputer pc(input);
     PaintingRobot r(pc);
     r.run();
-    //9881 too high
-    //9882 too high
     return 0;
 }
