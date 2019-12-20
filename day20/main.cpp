@@ -81,7 +81,7 @@ void searchPossibleMovesFromPosition(std::vector<std::vector<char>>& input, Posi
     }
 
     printData(input);
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     searchPossibleMovesFromPosition(input, {x-1, y});
     searchPossibleMovesFromPosition(input, {x+1, y});
     searchPossibleMovesFromPosition(input, {x, y+1});
@@ -90,18 +90,21 @@ void searchPossibleMovesFromPosition(std::vector<std::vector<char>>& input, Posi
 
 const auto findPosition = [](auto& input, char mark, char otherMark) -> Position{
     std::vector<Position> pos;
-    bool firstParsed = false;
     for (auto i = 0u; i < input.size(); ++i) {
         if (pos.size() == 2) break;
         for (auto j = 0u; j < input[i].size(); ++j) {
-            if (!firstParsed &&  input[i][j] == mark) {
-                pos.push_back({i,j});
-                firstParsed = true;
+            if (input[i][j] == mark) {
+                if (input[i+1][j] == otherMark) {
+                    pos.push_back({i,j});
+                    pos.push_back({i+1,j});
+                    break;
+                }
+                else if (input[i][j+1] == otherMark) {
+                    pos.push_back({i,j});
+                    pos.push_back({i,j+1});
+                    break;
+                }
             }
-            else if (firstParsed && input[i][j] == otherMark) {
-                pos.push_back({i,j});
-            }
-            if (pos.size() == 2) break;
         }
     }
     assert(pos.size() == 2);
