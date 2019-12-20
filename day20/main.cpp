@@ -29,6 +29,15 @@ struct Portal {
     Position pos;
     char mark;
 };
+
+
+struct Node{
+    char element;
+    std::size_t range;
+};
+
+std::list<Node> nodes;
+
 const auto loadData = [](auto path){
     std::vector<std::vector<char>> res;
     {
@@ -55,37 +64,41 @@ const auto printData = [](auto& data) {
     }
 };
 
-void searchPossibleMovesFromPosition(std::vector<std::vector<char>>& input, Position pos) {
+std::size_t searchPossibleMovesFromPosition(std::vector<std::vector<char>>& input, Position pos, std::size_t range) {
     const auto x = pos.x;
     const auto y = pos.y;
-    if (x >= input.size()) return;
-    if (y >= input[x].size()) return;
+    if (x >= input.size()) return 0;
+    if (y >= input[x].size()) return 0;
     if (input[x][y] == '@')
-        return;
+        return 0;
     if (input[x][y] == '#' || input[x][y] == ' '){
-        std::cout << "Hit: " << input[x][y] << " on (" << x << ", " << y << ")\n";
-        return;
+        //std::cout << "Hit: " << input[x][y] << " on (" << x << ", " << y << ")\n";
+        return 0;
     }
     if (input[x][y] == 'A') {
-        std::cout << "Hit: A on (" << x << ", " << y << ")\n";
-        return;
+        //std::cout << "Hit: A on (" << x << ", " << y << ")\n";
+        return 0;
     }
     if (input[x][y] >= 'B' && input[x][y] <= 'Z') {
-        std::cout << "Hit: " << input[x][y] << " on (" << x << ", " << y << ")\n";
-        input[x][y] = '@';
+        //std::cout << "Hit: " << input[x][y] << " on (" << x << ", " << y << ")\n";
+        nodes.push_back({input[x][y], range-1});
+        return 0;
     }
 
     if (input[x][y] == '.') {
-        std::cout << "Hit: . on (" << x << ", " << y << ")\n";
+        //std::cout << "Hit: . on (" << x << ", " << y << ")\n";
         input[x][y] = '@';
+        range++;
     }
 
-    printData(input);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    searchPossibleMovesFromPosition(input, {x-1, y});
-    searchPossibleMovesFromPosition(input, {x+1, y});
-    searchPossibleMovesFromPosition(input, {x, y+1});
-    searchPossibleMovesFromPosition(input, {x, y-1});
+    //printData(input);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    auto sum = 0;
+    sum += searchPossibleMovesFromPosition(input, {x-1, y}, range);
+    sum += searchPossibleMovesFromPosition(input, {x+1, y}, range);
+    sum += searchPossibleMovesFromPosition(input, {x, y+1}, range);
+    sum += searchPossibleMovesFromPosition(input, {x, y-1}, range);
+    return range + sum -1;
 };
 
 const auto findPosition = [](auto& input, char mark, char otherMark) -> Position{
@@ -119,20 +132,17 @@ const auto findPosition = [](auto& input, char mark, char otherMark) -> Position
             return {first.x, second.y+1}; // AA.
     }
     else { //vertical
-        /*
-        * .
-        * A
-        * A
-        */
+        /* .
+        *  A
+        *  A */
         if (first.x > 1)
             if (input[first.x-1][first.y] == '.')
                 return {first.x-1, first.y};
 
-        /*
-        * A
-        * A
-        * .
-        */
+
+        /* A
+        *  A
+        *  . */
         if (input[second.x+1][first.y] == '.')
             return {second.x+1, first.y};
     }
@@ -157,6 +167,7 @@ const auto traverseFromPosition = [](auto& map, Position pos) -> std::list<Porta
     return portals;
 };
 
+
 }
 
 int main(int argc, char** argv)
@@ -168,7 +179,7 @@ int main(int argc, char** argv)
 
     const std::string path = argv[1];
     auto input = loadData(path);
-    //printData(input);
+    printData(input);
     auto startingPos = getStartingPosition(input);
     auto ending = getEndingPos(input);
     std::cout << startingPos.x << '-' << startingPos.y;
@@ -176,6 +187,14 @@ int main(int argc, char** argv)
     std::cout << ending.x << '-' << ending.y;
     std::cout << '\n';
     auto map = input;
-    searchPossibleMovesFromPosition(map, startingPos);
+    //searchPossibleMovesFromPosition(map, startingPos);
+    map = input;
+    //auto dd = findPosition(map, 'T', 'Y');
+    std::size_t sum = 0;
+    searchPossibleMovesFromPosition(map, startingPos, sum);
+    std::cout << "Sum: " << sum << std::endl;
+    for (auto& e: nodes){
+        std::cout << e.element << '-' << e.range << '\n';
+    }
     return 0;
 }
