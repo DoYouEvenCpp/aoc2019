@@ -132,20 +132,14 @@ const auto findPosition = [](auto& input, char mark, char otherMark) -> Position
             return {first.x, second.y+1}; // AA.
     }
     else { //vertical
-        /* .
-        *  A
-        *  A */
-        if (first.x > 1)
-            if (input[first.x-1][first.y] == '.')
-                return {first.x-1, first.y};
+        if (first.x > 1)                            // .
+            if (input[first.x-1][first.y] == '.')   // A
+                return {first.x-1, first.y};        // A
 
 
-        /* A
-        *  A
-        *  . */
-        if (input[second.x+1][first.y] == '.')
-            return {second.x+1, first.y};
-    }
+        if (input[second.x+1][first.y] == '.')      // A
+            return {second.x+1, first.y};           // A
+    }                                               // .
     assert(false);
     return {};
 };
@@ -153,21 +147,13 @@ const auto findPosition = [](auto& input, char mark, char otherMark) -> Position
 const auto getStartingPosition = [](auto& input) -> Position{
     return findPosition(input, 'A', 'A');
 };
-
 const auto getEndingPos = [](auto& input) -> Position{
     return findPosition(input, 'Z', 'Z');
 };
 
+const auto searchForPortals = [](auto& map) {
 
-const auto traverseFromPosition = [](auto& map, Position pos) -> std::list<Portal> {
-    auto& x = pos.x;
-    auto& y = pos.y;
-    std::list<Portal> portals;
-
-    return portals;
 };
-
-
 }
 
 int main(int argc, char** argv)
