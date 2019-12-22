@@ -351,6 +351,16 @@ int main()
     IntCodeComputer pc(input);
     pc.disableDebug();
     //pc.setAsciiMode(true);
+    /*
+    first puzzle answer
+        NOT A J\n\
+        OR T J\n\
+        NOT B T\n\
+        OR T J\n\
+        NOT C T\n\
+        OR T J\n\
+        AND D J\n\
+    */
     const std::string s = "\
         NOT A J\n\
         OR T J\n\
