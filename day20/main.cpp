@@ -156,6 +156,14 @@ const auto searchPortals = [](auto const& input) {
                 std::cout << input[i][j] << '-' << input[i][j + 1] << '\n';
         }
     }
+
+    const auto width = input[0].size();
+    for (auto i = 0; i < width; ++i) {
+        for (auto j = 0; j < input.size() - 1; ++j) {
+            if ((input[j][i] >= 'A' && input[j][i] <= 'Z') && (input[j+1][i] >= 'A' && input[j+1][i] <= 'Z'))
+                std::cout << input[j][i] << '-' << input[j+1][i] << '\n';
+        }
+    }
 };
 }
 
@@ -166,7 +174,8 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    const std::string path = argv[1];
+    //const std::string path = argv[1];
+    const std::string path = "C:\\Users\\staho\\projects\\aoc2019\\_sln\\ConsoleApplication1\\x64\\Debug\\input";
     auto input = loadData(path);
     printData(input);
     auto startingPos = getStartingPosition(input);
