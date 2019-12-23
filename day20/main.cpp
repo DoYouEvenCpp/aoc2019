@@ -25,11 +25,6 @@ struct Position {
     std::size_t y;
 };
 
-struct Portal {
-    Position pos;
-    char mark;
-};
-
 
 struct Node{
     char element;
@@ -42,15 +37,17 @@ const auto loadData = [](auto path){
     std::vector<std::vector<char>> res;
     {
         char ch;
+        bool insertNewLine = false;
         std::fstream fs(path, std::fstream::in);
         res.push_back({});
         while (fs.get(ch)) {
-            if(ch == '\n') {
-                res.back().push_back(ch);
+            if (insertNewLine) {
                 res.push_back({});
+                insertNewLine = false;
             }
-            else {
-                res.back().push_back(ch);
+            res.back().push_back(ch);
+            if (ch == '\n') {
+                insertNewLine = true;
             }
         }
         fs.close();
@@ -151,8 +148,14 @@ const auto getEndingPos = [](auto& input) -> Position{
     return findPosition(input, 'Z', 'Z');
 };
 
-const auto searchForPortals = [](auto& map) {
-
+const auto searchPortals = [](auto const& input) {
+    //scan for horizontal ones
+    for (auto i = 0u; i < input.size(); ++i) {
+        for (auto j = 0u; j < input[i].size()- 1; ++j) {
+            if ((input[i][j] >= 'A' && input[i][j] <= 'Z') && (input[i][j + 1] >= 'A' && input[i][j + 1] <= 'Z'))
+                std::cout << input[i][j] << '-' << input[i][j + 1] << '\n';
+        }
+    }
 };
 }
 
@@ -182,5 +185,8 @@ int main(int argc, char** argv)
     for (auto& e: nodes){
         std::cout << e.element << '-' << e.range << '\n';
     }
+    std::cout << '\n';
+    std::cout << '\n';
+    searchPortals(input);
     return 0;
 }
