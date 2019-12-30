@@ -21,8 +21,10 @@
 
 namespace {
 
+using dataType = std::unordered_map<std::string, std::vector<std::string>>;
+
 const auto loadData = [](auto path){
-    std::unordered_map<std::string, std::vector<std::string>> res;
+    dataType res;
     {
         char ch;
         std::string name;
@@ -64,6 +66,16 @@ const auto printData = [](auto& data) {
         }
         std::cout << '\n';
     }
+};
+
+const auto parseInput = [](dataType input) {
+    dataType parsed;
+
+    parsed.try_emplace("COM");
+    for (auto& e: input["COM"]) {
+        parsed["COM"].push_back(e);
+    }
+    input.erase("COM");
 };
 
 }
