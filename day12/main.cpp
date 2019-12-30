@@ -11,61 +11,31 @@
 #include <cassert>
 #include <optional>
 #include <unordered_set>
+#include <numeric>
 
 namespace {
-    struct Pos {
-        int x;
-        int y;
-        int z;
-    };
-    struct Velocity {
-        int x{ 0 };
-        int y{ 0 };
-        int z{ 0 };
-    };
-    struct Moon {
-        Pos p;
-        Velocity v;
-        bool operator==(Moon const& o) const {
-            return o.p.x == p.x && o.p.y == p.y && o.p.z == p.z
-                && o.v.x == v.x && o.v.y == v.y && o.v.z == v.z;
-        }
+struct Pos {
+    int x;
+    int y;
+    int z;
 };
-
-    struct Test {
-        int a;
-        int b;
-        int c;
-        int d;
-
-        bool operator==(Test const& o) const {
-            return o.a == a && o.b == b && o.c == c && o.d == d;
-        }
-    };
-struct MyHash
-{
-    std::size_t operator()(Test const& moon) const noexcept
-    {
-        //const std::size_t h1 = std::hash<int>{}(moon.p.x);
-        //const std::size_t h2 = std::hash<int>{}(moon.p.y);
-        //const std::size_t h3 = std::hash<int>{}(moon.p.z);
-        //const std::size_t h4 = std::hash<int>{}(moon.p.x);
-        //const std::size_t h5 = std::hash<int>{}(moon.p.y);
-        //const std::size_t h6 = std::hash<int>{}(moon.p.z);
-        //const auto h7 = std::hash<int>{}(moon.v.x);
-        const auto h4 = std::hash<int>{}(moon.a);
-        const auto h5 = std::hash<int>{}(moon.b);
-        const auto h6 = std::hash<int>{}(moon.c);
-        const auto h7 = std::hash<int>{}(moon.d);
-        //return ((((h1 ^ (h2 << 1)) ^ (h3 << 2)) ^ (h4 << 3)) ^ (h5 << 4)) ^ (h6 << 5);
-        //return (((h4 ^ (h5 << 1)) ^ (h6 << 2))) ^ (h7 << 3);
-        return ((h4 ^ (h5 << 1)) ^ (h6 << 2)) ^ (h7 << 3);
+struct Velocity {
+    int x{ 0 };
+    int y{ 0 };
+    int z{ 0 };
+};
+struct Moon {
+    Pos p;
+    Velocity v;
+    bool operator==(Moon const& o) const {
+        return o.p.x == p.x && o.p.y == p.y && o.p.z == p.z
+            && o.v.x == v.x && o.v.y == v.y && o.v.z == v.z;
     }
 };
 
 std::vector<Moon> input = {
-    {15, - 2, -6},
-    {-5, - 4, -11},
+    {15, -2, -6},
+    {-5, -4, -11},
     {0, -6, 0},
     {5, 9, 6},
 
@@ -128,47 +98,49 @@ const auto applyVelocity = [](std::vector<Moon>& input) {
     }
 };
 
-}
+const auto getMoon = [](auto & input, char axis) -> Moon {
+    if (axis == 'x') {
+        return { input[0].p.x, input[1].p.x, input[2].p.x, input[3].p.x };
+    }
+    else if (axis == 'y') {
+        return { input[0].p.y, input[1].p.y, input[2].p.y, input[3].p.y };
+    }
+    else {
+        return { input[0].p.z, input[1].p.z, input[2].p.z, input[3].p.z };
+    }
+};
 
+}
 
 int main() {
 
     int sum = 0;
-    auto copy_input = input;
-    for (auto i = 0u ;i < 1000; ++i) {
+    const auto copy_input = input;
+    for (auto i = 0u; i < 1000; ++i) {
         applyGravity(input);
         applyVelocity(input);
     }
-    for (auto& moon: input)
+    for (auto& moon : input)
         sum += getMoonTotalEnergy(moon);
     std::cout << "First puzzle answer: " << sum << '\n';
-
-
     input = copy_input;
-    // constexpr auto val = 100 * 100 * 100;
-    // uint64_t counter = 1;
-    // std::unordered_set<Test, MyHash> moons;
-    // //moons.insert(input[3]);
-    // //moons.insert({ input[0].p.y, input[1].p.y, input[2].p.y, input[3].p.y });
-    // while(true) {
-    //     if ((counter % val) == 0) std::cout << counter << '\n';
-    //     applyGravity(input);
-    //     applyVelocity(input);
-    //     counter++;
-    //     const auto [_, isInserted] = moons.insert({ input[0].p.y, input[1].p.y, input[2].p.y, input[3].p.y });
-    //     if (!isInserted)
-    //     {
-    //         std::cout << std::distance(_, moons.end()) << '\n';
-    //         break;
-    //     }
-    //     //if (input[0].v.z == 0 && input[1].v.z == 0 && input[2].v.z == 0 && input[3].v.z == 0)
-    //         //break;
-    // }
 
+    uint64_t counter = 1;
+    Moon x({ input[0].p.x, input[1].p.x, input[2].p.x, input[3].p.x });
+    Moon y({ input[0].p.y, input[1].p.y, input[2].p.y, input[3].p.y });
+    Moon z({ input[0].p.z, input[1].p.z, input[2].p.z, input[3].p.z });
+    uint64_t x_counter = 0;
+    uint64_t y_counter = 0;
+    uint64_t z_counter = 0;
+    while (x_counter == 0 || y_counter == 0 || z_counter == 0) {
+        applyGravity(input);
+        applyVelocity(input);
+        counter++;
+        if (x_counter == 0 && x == getMoon(input, 'x')) x_counter = counter;
+        if (y_counter == 0 && y == getMoon(input, 'y')) y_counter = counter;
+        if (z_counter == 0 && z == getMoon(input, 'z')) z_counter = counter;
+    }
 
-    // //puzzle 2:
-    // // 163244813864492 -> too low
-    // // 653001901557465 -> too high
-    // std::cout << counter << std::endl;
+    std::cout << "Second puzzle answer: " << std::lcm(x_counter, std::lcm(y_counter, z_counter)) << '\n';
     return 0;
 }
