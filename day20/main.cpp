@@ -17,6 +17,7 @@
 #include <fstream>
 #include <thread>
 #include <chrono>
+#include <unordered_set>
 
 namespace {
 struct Position {
@@ -28,8 +29,8 @@ struct Position {
 };
 
 struct Portal {
-    Position first;
-    Position second;
+    Position out;
+    Position in;
 };
 struct Node{
     std::string element;
@@ -37,9 +38,16 @@ struct Node{
     Position pos;
 };
 
+
+using map_type = std::vector<std::vector<char>>;
 std::map<std::string, Portal> m;
 std::map<std::string, std::list<Node>> tree;
 std::list<Node> nodes;
+std::vector<map_type> maps;
+std::vector<size_t> ranges;
+std::size_t level = 0;
+std::unordered_set<std::string> visited;
+
 
 const auto loadData = [](auto path){
     std::vector<std::vector<char>> res;
@@ -63,74 +71,12 @@ const auto loadData = [](auto path){
     return res;
 };
 const auto printData = [](auto& data) {
+    std::cout << "\n\tLEVEL: " << level << '\n';
     for (auto& line: data) {
         for (auto ch: line)
             std::cout << ch;
     }
 };
-auto flag = true;
-
-std::stack<std::string> level;
-
-std::size_t searchPossibleMovesFromPosition(std::vector<std::vector<char>>& input, std::string from, Position pos, Position end, std::size_t range) {
-    auto x = pos.x;
-    auto y = pos.y;
-
-    if (x >= input.size()) return 0;
-    if (y >= input[x].size()) return 0;
-    if (input[x][y] == '#' || input[x][y] == ' ' || input[x][y] == '@'){
-        return 0;
-    }
-    if (pos == end && level.size() == 0) {
-        std::cout << "\t\t\t\t\t\t\tFINISHED! In " << range << " steps\n";
-    }
-
-    if (input[x][y] == '.') {
-        input[x][y] = '@';
-        range++;
-
-        auto xx = x;
-        auto yy = y;
-        auto it = std::find_if(m.begin(), m.end(), [&](auto& p) {
-            return p.second.first == pos || p.second.second == pos; });
-        if (it != m.end()) {
-            if (x == it->second.first.x && y == it->second.first.y) {
-                xx = it->second.second.x;
-                yy = it->second.second.y;
-            }
-            else {
-                xx = it->second.first.x;
-                yy = it->second.first.y;
-            }
-            if (from != it->first){
-                nodes.push_back({ it->first, range - 1, {xx, yy} });
-            /*if (flag) {*/
-                if (level.size() > 0 && it->first == level.top()) {
-                    level.pop();
-                }
-                else {
-                    level.push(it->first);
-                }
-                searchPossibleMovesFromPosition(input, it->first, { xx, yy }, end, range);
-            }
-        }
-    }
-
-    if (input[x][y] >= 'A' && input[x][y] <= 'Z') {
-        return 0;
-    }
-
-
-    printData(input);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    auto sum = 0;
-    sum += searchPossibleMovesFromPosition(input, from, {x-1, y}, end, range);
-    sum += searchPossibleMovesFromPosition(input, from, {x+1, y}, end, range);
-    sum += searchPossibleMovesFromPosition(input, from, {x, y+1}, end, range);
-    sum += searchPossibleMovesFromPosition(input, from, {x, y-1}, end, range);
-    return range + sum;
-};
-
 const auto findPosition = [](auto& input, char mark, char otherMark) -> Position{
     std::vector<Position> pos;
     for (auto i = 0u; i < input.size(); ++i) {
@@ -173,7 +119,6 @@ const auto findPosition = [](auto& input, char mark, char otherMark) -> Position
     assert(false);
     return {};
 };
-
 const auto getStartingPosition = [](auto& input) -> Position{
     return findPosition(input, 'A', 'A');
 };
@@ -198,11 +143,11 @@ const auto searchPortals = [](auto const& input) {
                 std::string portalName;
                 portalName += input[i][j];
                 portalName += input[i][j + 1];
-                if (m.count(portalName) == 0) {
-                    m[portalName].first = { x, y };
-                }
+
+                if (j == 0 || j == input.size() - 1)
+                    m[portalName].out = { x, y };
                 else
-                    m[portalName].second = { x, y };
+                    m[portalName].in = { x, y };
             }
         }
     }
@@ -224,20 +169,90 @@ const auto searchPortals = [](auto const& input) {
                 std::string portalName;
                 portalName += input[j][i];
                 portalName += input[j+1][i];
-                if (m.count(portalName) == 0) {
-                    m[portalName].first = { x, y };
-                }
+
+                if (i == 0 || i == width - 1)
+                    m[portalName].out = { x, y };
                 else
-                    m[portalName].second = { x, y };
+                    m[portalName].in = { x, y };
             }
         }
     }
-    m["AA"].second = m["AA"].first;
-    m["ZZ"].second = m["ZZ"].first;
+    m["AA"].out = m["AA"].in;
+    m["ZZ"].out = m["ZZ"].in;
 };
 const auto getPositions(std::string point) {
-    return std::make_tuple(m[point].first, m[point].second);
+    return std::make_tuple(m[point].in, m[point].out);
 }
+const auto getEmptyPositionCount = [](auto& map) {
+    std::size_t sum = 0;
+    for (auto& line : map) {
+        sum += std::count_if(line.begin(), line.end(), [](auto el) {return el == '.'; });
+    }
+    return sum;
+};
+
+std::size_t searchPossibleMovesFromPosition(std::string from, Position pos, Position end) {
+    auto x = pos.x;
+    auto y = pos.y;
+
+    if (x >= maps[level].size()) return 0;
+    if (y >= maps[level][x].size()) return 0;
+    if (maps[level][x][y] == '#' || maps[level][x][y] == ' ' || maps[level][x][y] == '@') {
+        return 0;
+    }
+    if (pos == end && level == 0) {
+        std::cout << "\t\t\t\t\t\t\tFINISHED! In " << ranges[level] << " steps\n";
+        return 0;
+    }
+
+    if (maps[level][x][y] == '.') {
+        maps[level][x][y] = '@';
+        ranges[level]++;
+
+        auto xx = x;
+        auto yy = y;
+        auto it = std::find_if(m.begin(), m.end(), [&](auto& p) {
+            return p.second.in == pos || p.second.out == pos; });
+        if (it != m.end()) {
+            const std::string current = it->first;
+            if (from != current && current != "ZZ" && current != "AA") {
+                if (x == it->second.in.x && y == it->second.in.y) {
+                    xx = it->second.out.x;
+                    yy = it->second.out.y;
+                    if (level < m.size() - 2)
+                        ++level;
+                }
+                else {
+                    xx = it->second.in.x;
+                    yy = it->second.in.y;
+                    if (level > 0)
+                        --level;
+                }
+                nodes.push_back({ it->first, ranges[level] - 1, {xx, yy} });
+                searchPossibleMovesFromPosition(current, { xx, yy }, end);
+            }
+        }
+    }
+
+    if (maps[level][x][y] >= 'A' && maps[level][x][y] <= 'Z') {
+        return 0;
+    }
+
+
+    //printData(maps[level]);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    auto sum = 0;
+    sum += searchPossibleMovesFromPosition(from, { x - 1, y }, end);
+    sum += searchPossibleMovesFromPosition(from, { x + 1, y }, end);
+    sum += searchPossibleMovesFromPosition(from, { x, y + 1 }, end);
+    sum += searchPossibleMovesFromPosition(from, { x, y - 1 }, end);
+    if (getEmptyPositionCount(maps[level]) == 0) {
+        while (getEmptyPositionCount(maps[level]) == 0) {
+            if (level > 0) --level;
+        }
+    }
+    return ranges[level] + sum;
+};
 }
 
 int main(int argc, char** argv)
@@ -266,7 +281,6 @@ int main(int argc, char** argv)
         connections[p.first] = {};
     }
 
-    flag = false;
     for (auto& p : connections) {
         nodes = {};
         map = input;
@@ -284,9 +298,12 @@ int main(int argc, char** argv)
         std::cout << '\n';
     }*/
 
-    flag = true;
+    for (auto i = 0; i < m.size() - 1 /*except ZZ portal*/; ++i) {
+        maps.push_back(input);
+        ranges.push_back(0);
+    }
     map = input;
-    searchPossibleMovesFromPosition(map, "AA", startingPos, ending, 0);
+    searchPossibleMovesFromPosition("AA", startingPos, ending);
 
     //516 - OK
     return 0;
