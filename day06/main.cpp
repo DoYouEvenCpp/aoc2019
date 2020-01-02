@@ -47,7 +47,6 @@ const auto loadData = [](auto path){
                 name = {};
                 value = {};
                 continue;
-
             }
             if (parsingName)
                 name += ch;
@@ -68,15 +67,17 @@ const auto printData = [](auto& data) {
     }
 };
 
-const auto parseInput = [](dataType input) {
-    dataType parsed;
+std::size_t traverse(dataType & input, std::string name, std::size_t partialSum) {
+    auto sum = partialSum;
 
-    parsed.try_emplace("COM");
-    for (auto& e: input["COM"]) {
-        parsed["COM"].push_back(e);
-    }
-    input.erase("COM");
-};
+    std::cout << "On node: " << name << '\n';
+    if (input.count(name) > 0)
+        for (auto const& e: input[name]) {
+            sum += traverse(input, e, partialSum + 1);
+        }
+    std::cout << '[' << name << "] returning: " << sum << '\n';
+    return sum;
+}
 
 }
 
@@ -90,5 +91,6 @@ int main(int argc, char** argv)
     const std::string path = argv[1];
     auto input = loadData(path);
     printData(input);
+    std::cout << '\n' <<  traverse(input, "COM", 0) << '\n';
     return 0;
 }
