@@ -70,14 +70,27 @@ const auto printData = [](auto& data) {
 std::size_t traverse(dataType & input, std::string name, std::size_t partialSum) {
     auto sum = partialSum;
 
-    std::cout << "On node: " << name << '\n';
     if (input.count(name) > 0)
         for (auto const& e: input[name]) {
             sum += traverse(input, e, partialSum + 1);
         }
-    std::cout << '[' << name << "] returning: " << sum << '\n';
     return sum;
 }
+
+ void getPathFromNode(dataType& input, std::string name, std::vector<std::string>& res) {
+    const auto findInValue = [name](std::vector<std::string> vec){
+        return std::any_of(vec.begin(), vec.end(), [name](std::string v) {return v == name; }); 
+    };
+    for (auto& entry : input) {
+        if (findInValue(entry.second)) {
+            if (entry.first != "COM") {
+                res.push_back(entry.first);
+                getPathFromNode(input, entry.first, res);
+            }
+            break;
+        }
+    }
+};
 
 }
 
@@ -90,7 +103,26 @@ int main(int argc, char** argv)
 
     const std::string path = argv[1];
     auto input = loadData(path);
-    printData(input);
-    std::cout << '\n' <<  traverse(input, "COM", 0) << '\n';
+    //printData(input);
+    const auto firstPuzzle = traverse(input, "COM", 0);
+    std::cout << "First puzzle answer: " << firstPuzzle << '\n';
+
+    std::vector<std::string> you_path;
+    std::vector<std::string> santa_path;
+    getPathFromNode(input, "YOU", you_path);
+    getPathFromNode(input, "SAN", santa_path);
+
+    std::set<std::string> ss;
+    for (const auto e : you_path) {
+        ss.insert(e);
+    }
+    std::size_t count{};
+    for (const auto e : santa_path) {
+        if (auto [_, isInserted] = ss.insert(e); !isInserted) {
+            count++;
+        }
+    }
+
+    std::cout << "Second answer: " << ss.size() - count << std::endl;
     return 0;
 }
