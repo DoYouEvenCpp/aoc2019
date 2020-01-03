@@ -63,11 +63,40 @@ const auto getVisibleAsteroidsCount = [](int ii, int jj, DataType& map) {
                 if (i == ii && j == jj) continue;
                 const auto xx = ii - i;
                 const auto yy = jj - j;
-                angles.insert(std::atan2(yy, xx));
+                const auto v = std::atan2(yy, xx);
+                //std::cout << (v * 180) /3.14 <<' ' << j << ',' << i << '\n';
+                angles.insert(v);
             }
         }
     }
-    return angles.size();
+    return std::make_tuple(angles.size(), ii, jj);
+};
+
+
+struct Asteroid {
+    int x;
+    int y;
+};
+
+const auto calculateAngles = [](int ii, int jj, DataType& input) {
+    std::vector<std::vector<float>> angles;
+    std::vector<Asteroid> burned_asteroids;
+    auto map = input;
+
+    for (auto i = 0; i < static_cast<int>(map.size()); ++i) {
+        angles.push_back({});
+        for (auto j = 0; j < static_cast<int>(map[i].size()); ++j) {
+            if (i == ii && j == jj) {
+                angles.back().push_back(std::numeric_limits<float>::min());
+                continue;
+            }
+            const auto xx = ii - (i - ii);
+            const auto yy = jj - (j - jj);
+            const auto v = std::atan2(yy, xx);
+            std::cout << (v * 180) /3.14 <<' ' << i - ii<< ',' << j -jj << '\n';
+            angles.back().push_back(v);
+        }
+    }
 };
 
 }
@@ -82,14 +111,25 @@ int main(int argc, char** argv)
     const std::string path = argv[1];
     auto input = loadData(path);
     auto sum = 0u;
+    auto ii = 0;
+    auto jj = 0;
     for (auto i = 0u; i < input.size(); ++i) {
         for (auto j = 0u; j < input[i].size(); ++j) {
             if (input[i][j] == '#') {
-                const auto temp = getVisibleAsteroidsCount(i,j, input);
-                if (temp > sum) sum = temp;
+                const auto [temp, i_, j_] = getVisibleAsteroidsCount(i,j, input);
+                if (temp > sum){
+                    sum = temp;
+                    ii = i_;
+                    jj = j_;
+                }
             }
         }
     }
-    std::cout <<"First puzzle answer: " << sum << '\n';
+    std::cout <<"First puzzle answer: " << sum << ' ' << ii << ' ' << jj << '\n';
+
+
+    //calculateAngles(ii, jj, input);
+    calculateAngles(3, 8, input);
+
     return 0;
 }
