@@ -78,25 +78,52 @@ struct Asteroid {
     int y;
 };
 
+constexpr auto PI = 3.14159265359f;
+
+const auto getAngle = [](auto xx, auto yy) {
+    auto deg = (180*std::atan2(yy, xx)) / PI;
+
+    if (deg <= 90 && deg >= 0) {
+        deg = std::abs(deg - 90);
+    }
+    else if (deg < 0) {
+        deg = std::abs(deg) + 90;
+    }
+    else {
+        deg = 450 - deg;
+    }
+    return deg;
+};
 const auto calculateAngles = [](int ii, int jj, DataType& input) {
-    std::vector<std::vector<float>> angles;
+    //std::vector<std::vector<float>> angles;
     std::vector<Asteroid> burned_asteroids;
+    std::map<int, std::vector<Asteroid>> angles;
     auto map = input;
 
     for (auto i = 0; i < static_cast<int>(map.size()); ++i) {
-        angles.push_back({});
+        //angles.push_back({});
         for (auto j = 0; j < static_cast<int>(map[i].size()); ++j) {
-            if (i == ii && j == jj) {
-                angles.back().push_back(std::numeric_limits<float>::min());
-                continue;
+            if (map[i][j] == '#') {
+                if (i == ii && j == jj) {
+                    //angles.back().push_back(std::numeric_limits<float>::min());
+                    continue;
+                }
+                const auto yy = ii - (i);
+                const auto xx = jj - (j);
+                const auto v = getAngle(yy, xx);// (std::atan2(yy, xx);
+                angles[v].push_back({i,j});
+                //std::cout << v << ' ' << i - ii << ',' << j - jj << '\n';
+                //angles.back().push_back(v);
+                //map[i][j] = 'S';
+                //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                //printData(map);
+                //std::cout << '\n' << '\n' << '\n' << '\n';
+                //std::getchar();
+                //map[i][j] = '#';
             }
-            const auto xx = ii - (i - ii);
-            const auto yy = jj - (j - jj);
-            const auto v = std::atan2(yy, xx);
-            std::cout << (v * 180) /3.14 <<' ' << i - ii<< ',' << j -jj << '\n';
-            angles.back().push_back(v);
         }
     }
+    return angles;
 };
 
 }
@@ -129,7 +156,7 @@ int main(int argc, char** argv)
 
 
     //calculateAngles(ii, jj, input);
-    calculateAngles(3, 8, input);
+    auto m = calculateAngles(3, 8, input);
 
     return 0;
 }
