@@ -18,6 +18,7 @@
 #include <thread>
 #include <chrono>
 #include <unordered_set>
+#include <set>
 
 
 namespace {
@@ -52,11 +53,13 @@ const auto printData = [](auto& data) {
     }
 };
 
+//THAT IS SHITTY.
+auto firstPuzzleX = 0;
+auto firstPuzzleY = 0;
+
 
 const auto getVisibleAsteroidsCount = [](int ii, int jj, DataType& map) {
     std::set<float> angles;
-    //TODO: i'm too tired to analyze that right now
-    //i & j & ii && jj shall be unsigned ints( i.e. std:size_t)
     for (auto i = 0; i < static_cast<int>(map.size()); ++i) {
         for (auto j = 0; j < static_cast<int>(map[i].size()); ++j) {
             if (map[i][j] == '#') {
@@ -64,7 +67,6 @@ const auto getVisibleAsteroidsCount = [](int ii, int jj, DataType& map) {
                 const auto xx = ii - i;
                 const auto yy = jj - j;
                 const auto v = std::atan2(yy, xx);
-                //std::cout << (v * 180) /3.14 <<' ' << j << ',' << i << '\n';
                 angles.insert(v);
             }
         }
@@ -72,10 +74,19 @@ const auto getVisibleAsteroidsCount = [](int ii, int jj, DataType& map) {
     return std::make_tuple(angles.size(), ii, jj);
 };
 
+const auto getManhattanDistance = [](auto x, auto y, auto x1, auto y1) {
+    return std::abs(x - x1) + std::abs(y - y1);
+};
 
 struct Asteroid {
     int x;
     int y;
+
+    bool operator<(Asteroid const& lhs) const noexcept {
+        const auto myDistance = getManhattanDistance(x, y, firstPuzzleY, firstPuzzleY);
+        const auto lhsDistance = getManhattanDistance(lhs.x, lhs.y, firstPuzzleY, firstPuzzleY);
+        return lhsDistance < myDistance;
+    }
 };
 
 constexpr auto PI = 3.14159265359f;
@@ -95,37 +106,24 @@ const auto getAngle = [](auto xx, auto yy) {
     return deg;
 };
 const auto calculateAngles = [](int ii, int jj, DataType& input) {
-    //std::vector<std::vector<float>> angles;
-    std::vector<Asteroid> burned_asteroids;
-    std::map<int, std::vector<Asteroid>> angles;
+    std::map<float, std::vector<Asteroid>> angles;
     auto map = input;
 
     for (auto i = 0; i < static_cast<int>(map.size()); ++i) {
-        //angles.push_back({});
         for (auto j = 0; j < static_cast<int>(map[i].size()); ++j) {
             if (map[i][j] == '#') {
                 if (i == ii && j == jj) {
-                    //angles.back().push_back(std::numeric_limits<float>::min());
                     continue;
                 }
-                const auto yy = ii - (i);
-                const auto xx = jj - (j);
-                const auto v = getAngle(yy, xx);// (std::atan2(yy, xx);
-                angles[v].push_back({i,j});
-                //std::cout << v << ' ' << i - ii << ',' << j - jj << '\n';
-                //angles.back().push_back(v);
-                //map[i][j] = 'S';
-                //std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                //printData(map);
-                //std::cout << '\n' << '\n' << '\n' << '\n';
-                //std::getchar();
-                //map[i][j] = '#';
+                const auto yy = ii - i;
+                const auto xx = jj - j;
+                const auto v = getAngle(yy, xx);
+                angles[v].push_back({j, i});
             }
         }
     }
     return angles;
 };
-
 }
 
 int main(int argc, char** argv)
@@ -153,10 +151,43 @@ int main(int argc, char** argv)
         }
     }
     std::cout <<"First puzzle answer: " << sum << ' ' << ii << ' ' << jj << '\n';
+    firstPuzzleX = jj;
+    firstPuzzleY = ii;
 
+    auto m = calculateAngles(ii, jj, input);
+    //for testing
+    //auto m = calculateAngles(3, 8, input);
 
-    //calculateAngles(ii, jj, input);
-    auto m = calculateAngles(3, 8, input);
+    std::vector<float> angles;
+    for (auto& e: m) {
+        angles.push_back(e.first);
+        std::sort(e.second.begin(), e.second.end(), [](Asteroid const& lhs, Asteroid const& rhs){
+            return getManhattanDistance(lhs.x, lhs.y, firstPuzzleX, firstPuzzleY) <
+            getManhattanDistance(rhs.x, rhs.y, firstPuzzleX, firstPuzzleY);
+        });
+    }
+    auto currentAngle = std::upper_bound(angles.begin(), angles.end(), 89.99);
+    std::vector<Asteroid> burned_asteroids;
+
+    while(!m.empty()) {
+        if (m.count(*currentAngle)) {
+            if (m[*currentAngle].empty()) m.erase(*currentAngle);
+            else {
+                burned_asteroids.push_back(m[*currentAngle].front());
+                m[*currentAngle].erase(m[*currentAngle].begin());
+            }
+        }
+        if (currentAngle == angles.end()) {
+            currentAngle = angles.begin();
+        }
+        else {
+            ++currentAngle;
+        }
+    }
+    if (burned_asteroids.size() > 199) {
+        auto& asteroid = burned_asteroids[199];
+        std::cout <<"Second puzzle answer: " <<  asteroid.x * 100 + asteroid.y << '\n';
+    }
 
     return 0;
 }
