@@ -30,7 +30,7 @@ struct Component {
     int quantity;
 };
 
-using DataType = std::unordered_map<std::string, std::vector<Component>>;
+using DataType = std::vector<std::pair<Component, std::vector<Component>>>;
 
 const auto loadData = [](auto path){
     DataType res;
@@ -40,12 +40,15 @@ const auto loadData = [](auto path){
 
     while (std::getline(fs, line)) {
         const auto productStartPos = line.find(" => ") + 4;
-        const auto product = line.substr(productStartPos);
+        auto product = std::istringstream(line.substr(productStartPos));
         auto ingredients = std::istringstream(line.substr(0, productStartPos - 4));
 
         std::vector<Component> tmp;
         Component comp;
         std::string token;
+
+        product >> comp.quantity >> comp.name;
+
         while (std::getline(ingredients, token, ',')) {
             if (token[0] == ' ') token.erase(0, 1);
             const auto numberPos = token.find(' ');
@@ -53,7 +56,8 @@ const auto loadData = [](auto path){
             auto name = token.substr(numberPos + 1);
             tmp.push_back({name, number});
         }
-        res[product] = tmp;
+        //res[product] = tmp;
+        res.push_back(std::make_pair(comp, tmp));
         tmp = {};
     }
 
@@ -67,6 +71,23 @@ const auto printData = [](auto& data) {
             std::cout << ch;
     }
 };
+
+int getValue(DataType& map, std::string val){
+    /*auto it = std::find(map.begin(), map.end(), [val](DataType::value_type& p) {
+            return p.first.name == val;
+        });
+    if (it != map.end()) {
+        if (it->second.size() == 1 && it->second[0].name == "ORE") {
+            return it->second[0].quantity;
+        }
+        auto sum = 0;
+        for (auto& entry : it->second) {
+            sum += entry.quantity * getValue(map, entry.name);
+        }
+        return sum;
+    }*/
+    return 0;
+};
 }
 
 int main(int argc, char** argv)
@@ -79,7 +100,7 @@ int main(int argc, char** argv)
     const std::string path = argv[1];
     auto input = loadData(path);
     for (auto& e: input) {
-        std::cout << e.first << " => ";
+        std::cout << e.first.name << " => ";
         for (auto& ee: e.second) {
             std::cout << ee.quantity << '*' << ee.name << ',';
         }
