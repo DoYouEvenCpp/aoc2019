@@ -56,7 +56,6 @@ const auto loadData = [](auto path){
             auto name = token.substr(numberPos + 1);
             tmp.push_back({name, number});
         }
-        //res[product] = tmp;
         res.push_back(std::make_pair(comp, tmp));
         tmp = {};
     }
@@ -65,28 +64,37 @@ const auto loadData = [](auto path){
     return res;
 };
 
-const auto printData = [](auto& data) {
-    for (auto& line: data) {
-        for (auto ch: line)
-            std::cout << ch;
+const auto printData = [](auto& input) {
+    for (auto& e: input) {
+        std::cout << e.first.name << '[' << e.first.quantity << "] => ";
+        for (auto& ee: e.second) {
+            std::cout << ee.quantity << '*' << ee.name << ',';
+        }
+        std::cout << '\n';
     }
 };
 
-int getValue(DataType& map, std::string val){
-    /*auto it = std::find(map.begin(), map.end(), [val](DataType::value_type& p) {
-            return p.first.name == val;
-        });
+
+std::map<std::string, int> values;
+
+void getValue(DataType& map, std::string val, int count){
+    auto it = std::find_if(map.begin(), map.end(), [val](DataType::value_type& p) {
+            return p.first.name == val;});
+
     if (it != map.end()) {
+        const auto base = std::ceil(count / static_cast<double>(it->first.quantity));
         if (it->second.size() == 1 && it->second[0].name == "ORE") {
-            return it->second[0].quantity;
+            std::cout << "ORE: " << it->second[0].quantity << " * " <<  count <<  " base: " << base;
+            values[val] += count;
         }
-        auto sum = 0;
-        for (auto& entry : it->second) {
-            sum += entry.quantity * getValue(map, entry.name);
+        else {
+            for (auto& entry : it->second) {
+                std::cout << "Going into " << entry.name << ", with " << entry.quantity << " * " << base << " -> ";
+                getValue(map, entry.name, entry.quantity * base);
+                std::cout << '\n';
+            }
         }
-        return sum;
-    }*/
-    return 0;
+    }
 };
 }
 
@@ -99,12 +107,18 @@ int main(int argc, char** argv)
 
     const std::string path = argv[1];
     auto input = loadData(path);
-    for (auto& e: input) {
-        std::cout << e.first.name << " => ";
-        for (auto& ee: e.second) {
-            std::cout << ee.quantity << '*' << ee.name << ',';
-        }
-        std::cout << '\n';
+
+    //printData(input);
+    getValue(input, "FUEL", 1);
+
+    auto sum = 0;
+    for (auto& entry: values) {
+        auto it = std::find_if(input.begin(), input.end(), [&entry](DataType::value_type& p) {return p.first.name == entry.first;});
+        const auto count = std::ceil(entry.second / static_cast<double>(it->first.quantity));
+        sum += it->second[0].quantity * count;
+        std::cout << entry.first << '[' << it->first.quantity << "]: " << entry.second  << "-> " << it->second[0].quantity << " * " << count << std::endl;
     }
+    std::cout << '\n' << '\n' << sum << '\n';
+    //451849 too high
     return 0;
 }
