@@ -345,43 +345,55 @@ namespace {
 
         void explore() {
             auto param = NORTH;
-            map.insert({ 0,0 });
+            addPoint(0, 0, '.');
             makeMove(NORTH, 0, 0);
             makeMove(SOUTH, 0, 0);
             makeMove(EAST, 0, 0);
             makeMove(WEST, 0, 0);
         }
+        void printMap() {
+            for (auto& e : map) {
+                std::cout << e.first.x << ',' << e.first.y << " -> " << e.second << '\n';
+            }
+        }
 
 private:
     void makeMove(int direction, int x, int y) {
         std::stack<int> moves;
-        std::queue<int> q;
+        std::stack<int> q;
         q.push(direction);
 
         auto current_x = x;
         auto current_y = y;
 
         while(!q.empty()) {
-            const auto newDirection = q.front();
+            const auto newDirection = q.top();
             q.pop();
 
             auto [x_, y_] = getNewPositions(newDirection, current_x, current_y);
             const auto type = pc.run(newDirection);
-            if (auto [it, isInserted] = map.insert({ x_,y_,type }); !isInserted) {
+            const char c = type == 0 ? '#' : type == 1 ? '.' : 'O';
+            if (type == 0) {
+                addPoint(x_, y_, c);
+                continue;
+            }
+
+            if (auto [it, isInserted] = addPoint(x_, y_, c); !isInserted) {
                 //been here already
                 continue;
             }
-            if (type != 0) {
-                moves.push(getOpositeDirection(newDirection));
-                current_x = x_;
-                current_y = y_;
-            }
-            if (type != 0) {
-                    q.push(NORTH);
-                    q.push(SOUTH);
-                    q.push(EAST);
-                    q.push(WEST);
-            }
+            const auto oppositeDirection = getOpositeDirection(newDirection);
+            moves.push(oppositeDirection);
+            current_x = x_;
+            current_y = y_;
+            if (oppositeDirection != NORTH)
+                q.push(NORTH);
+            if (oppositeDirection != SOUTH)
+                q.push(SOUTH);
+            if (oppositeDirection != EAST)
+                q.push(EAST);
+            if (oppositeDirection != WEST)
+                q.push(WEST);
         }
         while (!moves.empty()) {
             pc.run(moves.top());
@@ -394,6 +406,7 @@ private:
         if (direction == SOUTH) return {x+1, y};
         if (direction == EAST) return {x, y+1};
         if (direction == WEST) return {x, y-1};
+        return {};
     }
     int getOpositeDirection(int direction) {
         if (direction == NORTH) return SOUTH;
@@ -404,9 +417,12 @@ private:
         return 0;
     }
 
+    std::pair<std::map<Point, char>::iterator, bool> addPoint(int x, int y, char c) {
+        return map.insert(std::make_pair(Point{ x,y }, c));
+    }
+
     IntCodeComputer pc;
-    std::set<Point> map;
-    std::set<Point> points_to_visit;
+    std::map<Point, char> map;
     Point currentPosition;
 };
 }
@@ -419,6 +435,7 @@ int main()
     IntCodeComputer pc(input);
     RepairRobot r(pc);
     r.explore();
+    r.printMap();
     std::cout << '\n';
     return 0;
 }
