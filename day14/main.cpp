@@ -74,11 +74,10 @@ const auto printData = [](auto& input) {
     }
 };
 
-std::map<std::string, int> values;
-std::map<std::string, int> spare;
-std::map<std::string, int> leftovers;
+std::map<std::string, int64_t> values;
+std::map<std::string, int64_t> leftovers;
 
-void calculateSingleIngredient(DataType& map, std::string name, int count) {
+void calculateSingleIngredient(DataType& map, std::string name, int64_t count) {
     auto it = std::find_if(map.begin(), map.end(), [name](DataType::value_type& p) {
             return p.first.name == name;});
 
@@ -88,9 +87,9 @@ void calculateSingleIngredient(DataType& map, std::string name, int count) {
             values[name] += finalCount;
         }
         else {
-            auto& leftover = spare[name];
+            auto& leftover = leftovers[name];
             count -= leftover;
-            int needed = (count + it->first.quantity  - 1) / it->first.quantity;
+            int64_t needed = (count + it->first.quantity  - 1) / it->first.quantity;
             leftover = needed * it->first.quantity - count;
             for (auto& entry : it->second) {
                 calculateSingleIngredient(map, entry.name, needed * entry.quantity);
@@ -99,20 +98,20 @@ void calculateSingleIngredient(DataType& map, std::string name, int count) {
     }
 };
 
-int64_t getOreNeeded(DataType& input, int counter = 1) {
-    calculateSingleIngredient(input, "FUEL", 1);
-    std::cout << '\n';
+int64_t getOreNeeded(DataType& input, int64_t counter) {
+    calculateSingleIngredient(input, "FUEL", counter);
+    //std::cout << '\n';
 
-    for (auto& entry: spare) {
+    for (auto& entry: leftovers) {
         values[entry.first] -= entry.second;
     }
-    auto sum = 0;
+    int64_t sum = 0;
     for (auto& entry: values) {
         auto it = std::find_if(input.begin(), input.end(), [&entry](DataType::value_type& p) {return p.first.name == entry.first;});
         const auto count = std::ceil(entry.second / static_cast<double>(it->first.quantity));
         sum += it->second[0].quantity * count;
     }
-    std::cout << "\n\nSum: " << sum << '\n';
+    //std::cout << "\n\nSum: " << sum << '\n';
     return sum;
 }
 }
@@ -126,6 +125,25 @@ int main(int argc, char** argv)
 
     const std::string path = argv[1];
     auto input = loadData(path);
-    getOreNeeded(input);
+    std::cout << "First puzzle answer: " << getOreNeeded(input, 1) << '\n';
+
+    int64_t low = 1;
+    int64_t high = 1000000000000;
+    while (true) {
+        leftovers.clear();
+        values.clear();
+        const int64_t medium = (low + high) / 2;
+        const auto res = getOreNeeded(input, medium);
+
+        if (res > 1000000000000)
+            high = medium;
+        else
+            low = medium;
+
+        if ((high - low) == 1) {
+                std::cout << "Second puzzle answer: " << medium - 1 << '\n';
+                break;
+        }
+    }
     return 0;
 }
