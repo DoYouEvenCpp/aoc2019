@@ -74,28 +74,47 @@ const auto printData = [](auto& input) {
     }
 };
 
-
 std::map<std::string, int> values;
+std::map<std::string, int> spare;
+std::map<std::string, int> leftovers;
 
-void getValue(DataType& map, std::string val, int count){
-    auto it = std::find_if(map.begin(), map.end(), [val](DataType::value_type& p) {
-            return p.first.name == val;});
+void calculateSingleIngredient(DataType& map, std::string name, int count) {
+    auto it = std::find_if(map.begin(), map.end(), [name](DataType::value_type& p) {
+            return p.first.name == name;});
 
     if (it != map.end()) {
-        const auto base = std::ceil(count / static_cast<double>(it->first.quantity));
         if (it->second.size() == 1 && it->second[0].name == "ORE") {
-            std::cout << "ORE: " << it->second[0].quantity << " * " <<  count <<  " base: " << base;
-            values[val] += count;
+            const auto finalCount = count;
+            values[name] += finalCount;
         }
         else {
+            auto& leftover = spare[name];
+            count -= leftover;
+            int needed = (count + it->first.quantity  - 1) / it->first.quantity;
+            leftover = needed * it->first.quantity - count;
             for (auto& entry : it->second) {
-                std::cout << "Going into " << entry.name << ", with " << entry.quantity << " * " << base << " -> ";
-                getValue(map, entry.name, entry.quantity * base);
-                std::cout << '\n';
+                calculateSingleIngredient(map, entry.name, needed * entry.quantity);
             }
         }
     }
 };
+
+int64_t getOreNeeded(DataType& input, int counter = 1) {
+    calculateSingleIngredient(input, "FUEL", 1);
+    std::cout << '\n';
+
+    for (auto& entry: spare) {
+        values[entry.first] -= entry.second;
+    }
+    auto sum = 0;
+    for (auto& entry: values) {
+        auto it = std::find_if(input.begin(), input.end(), [&entry](DataType::value_type& p) {return p.first.name == entry.first;});
+        const auto count = std::ceil(entry.second / static_cast<double>(it->first.quantity));
+        sum += it->second[0].quantity * count;
+    }
+    std::cout << "\n\nSum: " << sum << '\n';
+    return sum;
+}
 }
 
 int main(int argc, char** argv)
@@ -107,18 +126,6 @@ int main(int argc, char** argv)
 
     const std::string path = argv[1];
     auto input = loadData(path);
-
-    //printData(input);
-    getValue(input, "FUEL", 1);
-
-    auto sum = 0;
-    for (auto& entry: values) {
-        auto it = std::find_if(input.begin(), input.end(), [&entry](DataType::value_type& p) {return p.first.name == entry.first;});
-        const auto count = std::ceil(entry.second / static_cast<double>(it->first.quantity));
-        sum += it->second[0].quantity * count;
-        std::cout << entry.first << '[' << it->first.quantity << "]: " << entry.second  << "-> " << it->second[0].quantity << " * " << count << std::endl;
-    }
-    std::cout << '\n' << '\n' << sum << '\n';
-    //451849 too high
+    getOreNeeded(input);
     return 0;
 }
