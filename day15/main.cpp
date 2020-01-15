@@ -348,21 +348,18 @@ namespace {
             makeMove(EAST, 1, 0);
             makeMove(WEST, -1, 0);
         }
-        void printMap() {
-            int x = 0;
-            int y = 0;
-            std::set<int> xs;
-            std::set<int> ys;
-            for (auto& e : map) {
-                if (e.first.x < x) x = e.first.x;
-                if (e.first.y < y) y = e.first.y;
-                xs.insert(e.first.x);
-                ys.insert(e.first.y);
-            }
 
-            std::vector<std::vector<char>> data(ys.size());
+        void refillWithOxygen() {
+            refillWithOxygen(oxygen_point, 0);
+        }
+
+
+        void printMap() {
+            auto [x, y, xs_size, ys_size] = getMapSize();
+
+            std::vector<std::vector<char>> data(ys_size);
             for (auto& line: data){
-                line.resize(xs.size());
+                line.resize(xs_size);
             }
 
             for (auto& e: map) {
@@ -373,7 +370,7 @@ namespace {
 
             for (auto& line: data) {
                 for (auto& c: line) {
-                    if (c == 0) std::cout << 'X';
+                    if (c == 0) std::cout << '#';
                     else std::cout << c;
                 }
                 std::cout << '\n';
@@ -382,6 +379,25 @@ namespace {
         }
 
 private:
+    void refillWithOxygen(Point p, uint64_t depth) {
+        if (map.count({p.x, p.y}) == 0) return;
+        if (map[{p.x, p.y}] == '#') return;
+        if (filled_with_oxygen.count(p) > 0) return;
+
+        filled_with_oxygen.insert(p);
+        //798 is deduced basing on explored area; could be computed automatically, although
+        max_depth = std::max(max_depth, depth);
+        if (filled_with_oxygen.size() == 798) {
+            std::cout << "Second day puzzle: " << max_depth << '\n';
+            return;
+        }
+
+        refillWithOxygen({p.x, p.y -1}, depth+1);
+        refillWithOxygen({p.x, p.y +1}, depth+1);
+        refillWithOxygen({p.x+1, p.y}, depth+1);
+        refillWithOxygen({p.x-1, p.y}, depth+1);
+    }
+
     void makeMove(int direction, int x, int y) {
         if (map.count({x,y}) > 0) return;
 
@@ -396,7 +412,7 @@ private:
         addPoint(x, y, c);
         ++steps;
         if (type == 2) {
-            std::cout << "\n\n\nSteps: " << steps << "\n\n\n";
+            std::cout << "First puzzle answer: " << steps << '\n';
             oxygen_point = {x,y};
         }
 
@@ -429,9 +445,25 @@ private:
         return map.insert(std::make_pair(Point{ x,y }, c));
     }
 
+    std::tuple<int, int, int, int> getMapSize() const {
+        int x = 0;
+        int y = 0;
+        std::set<int> xs;
+        std::set<int> ys;
+        for (auto& e : map) {
+            if (e.first.x < x) x = e.first.x;
+            if (e.first.y < y) y = e.first.y;
+            xs.insert(e.first.x);
+            ys.insert(e.first.y);
+        }
+        return std::make_tuple(x, y, xs.size(), ys.size());
+    }
+
     IntCodeComputer pc;
     std::map<Point, char> map;
     Point oxygen_point;
+    std::set<Point> filled_with_oxygen;
+    uint64_t max_depth{0};
 };
 }
 
@@ -443,7 +475,8 @@ int main()
     IntCodeComputer pc(input);
     RepairRobot r(pc);
     r.explore();
-    r.printMap();
+    r.refillWithOxygen();
+    //r.printMap();
     std::cout << '\n';
 
     return 0;
