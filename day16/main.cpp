@@ -51,35 +51,40 @@ const auto printData = [](auto& v) {
     }
 };
 
-const auto calculatePhase = [](std::vector<int> input){
+const auto calculatePhase = [](std::vector<int>& input){
 
-        std::vector<int> new_input;
+        std::vector<int> new_input(input.size());
         for (auto j = 0u; j < input.size(); ++j) {
             int sum = 0;
             const auto pattern = generatePattern(j + 1, input.size());
             for (std::size_t k = 0u; k < input.size(); ++k) {
-                //std::cout << input[k] << '*' << pattern[k];
-                //if (k < input.size() -1) std::cout << " + ";
-
+                std::cout << input[k] << '*' << pattern[k];
+                if (k < input.size() -1) std::cout << " + ";
                 sum += pattern[k] * input[k];
             }
-            //std::cout <<  " = " << extractLastDigit(sum) << '\n';
-            new_input.push_back(extractLastDigit(sum));
+            std::cout <<  " = " << extractLastDigit(sum);
+            std::cout << "\n\n";
+            new_input[j] = extractLastDigit(sum);
         }
-        return new_input;
+        input = new_input;
 };
 }
 
 int main()
 {
     std::string input = "59777373021222668798567802133413782890274127408951008331683345339720122013163879481781852674593848286028433137581106040070180511336025315315369547131580038526194150218831127263644386363628622199185841104247623145887820143701071873153011065972442452025467973447978624444986367369085768018787980626750934504101482547056919570684842729787289242525006400060674651940042434098846610282467529145541099887483212980780487291529289272553959088376601234595002785156490486989001949079476624795253075315137318482050376680864528864825100553140541159684922903401852101186028076448661695003394491692419964366860565639600430440581147085634507417621986668549233797848";
+    input = "03036732577212944063491565474664";
+    //std::string ss;
+    //for (auto i = 1; i <= 1000; ++i) {
+        //ss += input;
+    //}
     //input = "80871224585914546619083218645595";
     auto data = convertToVector(input);
 
     auto d = data;
     for (auto i = 0u; i < 100; ++i) {
-        auto dd = calculatePhase(d);
-        d = dd;
+        //std::cout << '.';
+        calculatePhase(d);
     }
 
     printData(d);
