@@ -45,17 +45,16 @@ const auto print = [](auto const& v) {
     }
 };
 
-inline auto partial_sum(std::vector<int>& input, int len, int offset) {
+inline auto partial_sum(std::vector<int>& input,  std::size_t len,  std::size_t offset) {
     int sum = 0;
-    int i = offset;
+    std::size_t i = offset;
     for (; i < offset + len && i < input.size(); i++)
         sum += input[i];
     return std::make_pair(sum, i - offset);
 }
 
-int getValuesFromRange(std::vector<int>& input, int iteration, int offset) {
-    const auto count = (input.size() - offset) / iteration;
-    const auto size = input.size();
+int getValuesFromRange(std::vector<int>& input,  std::size_t iteration,  std::size_t offset) {
+    const int size = input.size();
     int sum = 0;
     int i = offset;
     int j = 0;
@@ -87,15 +86,13 @@ int getValuesFromRange(std::vector<int>& input, int iteration, int offset) {
     return sum;
 }
 
-const auto calculatePhase = [](std::vector<int>& input) {
+const auto calculatePhase = [](std::vector<int>& input,  std::size_t offset) {
     std::vector<int> new_input(input.size());
-    for (int j = 0; j < input.size(); ++j) {
+    for (auto j = offset; j < input.size(); ++j) {
         int sum = extractLastDigit(getValuesFromRange(input, j + 1, j));
         new_input[j] = sum;
     }
     std::swap(input, new_input);
-    //return new_input;
-    //print(input);
 };
 }
 
@@ -113,12 +110,9 @@ int main()
 
     std::cout << "starting... " << data.size() << ", offset: " << offset << '\n';
     auto d = data;
-    for (auto i = 0u; i < 100; ++i) {
-        auto start = std::chrono::steady_clock::now();
-        measureTimeInSeconds(calculatePhase, d);
-    }
+    for (auto i = 0u; i < 100; ++i)
+        measureTimeInSeconds(calculatePhase, d, offset);
 
-    print(d);
     std::cout << d.size() << '\n';
     if (d.size() >= offset + 8)
         print(std::vector<int>{d.begin() + offset, d.begin() + offset + 8});
