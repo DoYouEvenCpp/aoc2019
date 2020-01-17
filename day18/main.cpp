@@ -22,6 +22,7 @@ struct Position {
     int x;
     int y;
 };
+
 const auto loadData = [](auto path){
     std::vector<std::vector<char>> res;
     {
@@ -50,7 +51,7 @@ const auto printData = [](auto& data) {
 const auto getInitialPosition = [](auto& data) -> Position {
     for (auto i = 0; i < data.size(); ++i)
         for (auto j = 0; j < data[i].size(); ++j)
-            if (data[i][j] == '@') return {i, y};
+            if (data[i][j] == '@') return {i, j};
     return {};
 };
 
@@ -58,8 +59,20 @@ const auto searchPossibleMovesFromPosition = [](auto& input, Position pos) -> st
     return {};
 };
 
-const auto getAccessibleKeys = [](auto& input, Position pos) -> std::map<char, Position> {
-    return {};
+const auto getKeysAndDoorsLocation = [](auto& input){
+    std::map<char, Position> locations;
+    std::size_t i = 0, j = 0;
+    for (auto line: input) {
+        j = 0;
+        for (char ch: line) {
+            if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
+                locations[ch] = {i, j};
+            }
+            ++j;
+        }
+        ++i;
+    }
+    return locations;
 };
 }
 
@@ -74,5 +87,9 @@ int main(int argc, char** argv)
     const auto input = loadData(path);
     printData(input);
     auto pos = getInitialPosition(input);
+    const auto locations = getKeysAndDoorsLocation(input);
+    for (auto &e: locations) {
+        std::cout << e.first << " -> (" << e.second.x << ',' << e.second.y << ")\n";
+    }
     return 0;
 }
