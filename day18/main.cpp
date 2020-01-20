@@ -24,7 +24,7 @@ struct Position {
     std::size_t x;
     std::size_t y;
     bool operator<(Position const& lhs) const noexcept {
-        if(lhs.x < x) return true;
+        if(lhs.x > x) return true;
         else if (lhs.x == x) {
             return lhs.y < y;
         }
@@ -32,9 +32,17 @@ struct Position {
     }
 };
 
+struct Entry {
+    std::size_t x;
+    std::size_t y;
+    std::size_t keys;
+};
+
 std::map<char, Position> keys;
+std::set<uint32_t> steps_sum;
 using MAP = std::vector<std::vector<char>>;
-using Visited = std::set<Position>;
+using Visited = std::vector<Entry>;
+using KEYS = std::map<char, Position>;
 
 const auto loadData = [](auto path){
     std::vector<std::vector<char>> res;
@@ -92,53 +100,57 @@ const auto getKeysAndDoorsLocation = [](auto& input){
     return locations;
 };
 
-void traverse(Position p, MAP map, uint32_t counter, Visited visited) {
+void traverse(Position p, MAP map, uint32_t counter, Visited visited, KEYS keys) {
     if (keys.size() == 0) {
-        std::cout << "FINISHED in " << counter << " steps\n";
         return;
     }
     if (p.x >= map.size() || p.y >= map[0].size()) return;
     if (map[p.x][p.y] == '#') return;
-    if (visited.count(p) > 0) {
-        std::cout << "been here: (" << p.x << ',' << p.y << ")\n";
-        return;
-    }
 
-    visited.insert(p);
+    const auto current = Entry{p.x, p.y, keys.size()};
 
-    char& ch = map[p.x][p.y];
-    //std::cout << "\n\t\t>" << ch << "<\n";
-    if (ch >= 'a' && ch <= 'z'){
-        std::cout << "Got key: " << ch << '\n';
-        if (keys.size() == 1) {
-            //std::cout << "FINISHED in " << counter << " steps\n";
+    bool alreadyVisited = false;
+    for (auto& e: visited) {
+        if (e.x == current.x && e.y == current.y) {
+            alreadyVisited = e.keys == current.keys;
         }
-        keys.erase(ch);
     }
-    //if we hit a door, and have no key then return!
+    if (alreadyVisited) return;
+    visited.push_back(current);
+
+
+    char ch = map[p.x][p.y];
+    auto tmp = ch;
+
+    if (ch >= 'a' && ch <= 'z'){
+        //std::cout << "\tGot key: " << ch << '\n';
+        keys.erase(ch);
+        tmp = '.';
+        if (keys.size() == 0) {
+            //std::cout << "\tFINISHED in " << counter << " steps\n";
+            steps_sum.insert(counter);
+        }
+    }
     else if (ch >= 'A' && ch <= 'Z') {
         if (keys.count(ch + 32) == 1){
             //key has not been yet collected
             //can't open that very door
+            //return
             return;
         }
-        ch = '.';
+        //std::cout << "\tOpening door " << ch << '\n';
+        tmp = '.';
     }
-    auto c = ch;
-    ch = 'S';
-    printData(map);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    ch = c;
 
+    //map[p.x][p.y] = '*';
+    //printData(map);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    map[p.x][p.y] = tmp;
 
-    auto visiteda = visited;
-    traverse({p.x, p.y +1}, map, counter + 1, visiteda);
-    auto visitedb = visited;
-    traverse({p.x, p.y -1}, map, counter + 1, visitedb);
-    auto visitedc = visited;
-    traverse({p.x+1, p.y}, map, counter + 1, visitedc);
-    auto visitedd = visited;
-    traverse({p.x-1, p.y}, map, counter + 1, visitedd);
+    traverse({p.x, p.y +1}, map, counter + 1, visited, keys);
+    traverse({p.x, p.y -1}, map, counter + 1, visited, keys);
+    traverse({p.x+1, p.y}, map, counter + 1, visited, keys);
+    traverse({p.x-1, p.y}, map, counter + 1, visited, keys);
 }
 }
 
@@ -159,9 +171,12 @@ int main(int argc, char** argv)
     // for (auto &e: locations) {
     //     std::cout << e.first << " -> (" << e.second.x << ',' << e.second.y << ")\n";
     // }
+    //std::cout << pos.x << ' ' << pos.y << std::endl;
 
-    std::cout << pos.x << ' ' << pos.y << std::endl;
+    map[pos.x][pos.y] = '.';
+    auto keys_ = keys;
+    traverse(pos, map, 0, {}, keys_);
 
-    traverse(pos, map, 1, {});
+    std::cout << "\n\nShortest: " << *steps_sum.begin() << '\n';
     return 0;
 }
