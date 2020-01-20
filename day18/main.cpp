@@ -32,16 +32,10 @@ struct Position {
     }
 };
 
-struct Entry {
-    std::size_t x;
-    std::size_t y;
-    std::size_t keys;
-};
-
 std::map<char, Position> keys;
 std::set<uint32_t> steps_sum;
 using MAP = std::vector<std::vector<char>>;
-using Visited = std::vector<Entry>;
+using Visited = std::map<Position, std::size_t>;
 using KEYS = std::map<char, Position>;
 
 const auto loadData = [](auto path){
@@ -100,32 +94,21 @@ const auto getKeysAndDoorsLocation = [](auto& input){
     return locations;
 };
 
-void traverse(Position p, MAP map, uint32_t counter, Visited visited, KEYS keys) {
+void traverse(Position p, MAP& map, uint32_t counter, Visited visited, KEYS keys) {
     if (keys.size() == 0) {
         return;
     }
     if (p.x >= map.size() || p.y >= map[0].size()) return;
     if (map[p.x][p.y] == '#') return;
 
-    const auto current = Entry{p.x, p.y, keys.size()};
-
-    bool alreadyVisited = false;
-    for (auto& e: visited) {
-        if (e.x == current.x && e.y == current.y) {
-            alreadyVisited = e.keys == current.keys;
-        }
-    }
-    if (alreadyVisited) return;
-    visited.push_back(current);
-
-
     char ch = map[p.x][p.y];
-    auto tmp = ch;
+    //commented code required for printing purposes, duh
+    //auto tmp = ch;
 
     if (ch >= 'a' && ch <= 'z'){
         //std::cout << "\tGot key: " << ch << '\n';
         keys.erase(ch);
-        tmp = '.';
+        //tmp = '.';
         if (keys.size() == 0) {
             //std::cout << "\tFINISHED in " << counter << " steps\n";
             steps_sum.insert(counter);
@@ -139,13 +122,21 @@ void traverse(Position p, MAP map, uint32_t counter, Visited visited, KEYS keys)
             return;
         }
         //std::cout << "\tOpening door " << ch << '\n';
-        tmp = '.';
+        //tmp = '.';
     }
 
     //map[p.x][p.y] = '*';
     //printData(map);
     //std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    map[p.x][p.y] = tmp;
+    //map[p.x][p.y] = tmp;
+
+    if (visited.count(p) > 0) {
+        if (visited[p] <= keys.size()) return;
+            visited[p] = keys.size();
+    }
+    else {
+        visited[p] = keys.size();
+    }
 
     traverse({p.x, p.y +1}, map, counter + 1, visited, keys);
     traverse({p.x, p.y -1}, map, counter + 1, visited, keys);
