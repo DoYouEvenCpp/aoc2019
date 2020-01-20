@@ -94,7 +94,7 @@ const auto getKeysAndDoorsLocation = [](auto& input){
     return locations;
 };
 
-void traverse(Position p, MAP& map, uint32_t counter, Visited visited, KEYS keys) {
+void traverse(Position p, MAP& map, uint32_t counter, Visited& visited, KEYS keys) {
     if (keys.size() == 0) {
         return;
     }
@@ -166,8 +166,11 @@ int main(int argc, char** argv)
 
     map[pos.x][pos.y] = '.';
     auto keys_ = keys;
-    traverse(pos, map, 0, {}, keys_);
+    Visited v;
+    traverse(pos, map, 0, v, keys_);
 
     std::cout << "\n\nShortest: " << *steps_sum.begin() << '\n';
+
+    //7864 - too high
     return 0;
 }
