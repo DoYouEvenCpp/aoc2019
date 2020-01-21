@@ -30,13 +30,17 @@ struct Position {
         }
         return false;
     }
+
+    bool operator==(Position const& lhs) const {
+        return lhs.x == x && lhs.y == y;
+    }
 };
 
-std::map<char, Position> keys;
-std::set<uint32_t> steps_sum;
 using MAP = std::vector<std::vector<char>>;
 using Visited = std::map<Position, std::size_t>;
 using KEYS = std::map<char, Position>;
+KEYS keys;
+std::set<uint32_t> steps_sum;
 
 const auto loadData = [](auto path){
     std::vector<std::vector<char>> res;
@@ -103,12 +107,12 @@ void traverse(Position p, MAP& map, uint32_t counter, Visited& visited, KEYS key
 
     char ch = map[p.x][p.y];
     //commented code required for printing purposes, duh
-    //auto tmp = ch;
+    auto tmp = ch;
 
     if (ch >= 'a' && ch <= 'z'){
         //std::cout << "\tGot key: " << ch << '\n';
         keys.erase(ch);
-        //tmp = '.';
+        tmp = '.';
         if (keys.size() == 0) {
             //std::cout << "\tFINISHED in " << counter << " steps\n";
             steps_sum.insert(counter);
@@ -122,13 +126,8 @@ void traverse(Position p, MAP& map, uint32_t counter, Visited& visited, KEYS key
             return;
         }
         //std::cout << "\tOpening door " << ch << '\n';
-        //tmp = '.';
+        tmp = '.';
     }
-
-    //map[p.x][p.y] = '*';
-    //printData(map);
-    //std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    //map[p.x][p.y] = tmp;
 
     if (visited.count(p) > 0) {
         if (visited[p] <= keys.size()) return;
@@ -138,11 +137,61 @@ void traverse(Position p, MAP& map, uint32_t counter, Visited& visited, KEYS key
         visited[p] = keys.size();
     }
 
+    map[p.x][p.y] = '*';
+    printData(map);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    map[p.x][p.y] = ch;
+
     traverse({p.x, p.y +1}, map, counter + 1, visited, keys);
     traverse({p.x, p.y -1}, map, counter + 1, visited, keys);
     traverse({p.x+1, p.y}, map, counter + 1, visited, keys);
     traverse({p.x-1, p.y}, map, counter + 1, visited, keys);
 }
+
+
+int32_t getStepsNumber(Position p, Position to, KEYS k, MAP& map, Visited& visited, int32_t steps = 0){
+
+    char c = map[p.x][p.y];
+    if (p.x >= map.size() || p.y >= map[0].size()) return -1;
+    if (c == '#') return -1;
+
+    if (c >= 'A' && c <= 'Z') {
+        if (k.count(c + 32) == 0)
+            return -1;
+    }
+
+    if (visited.count(p) > 0) {
+        return -1;
+    }
+    visited[p] = 0;
+
+
+    if (p == to){
+        //std::cout << c << " after " << steps << " steps\n";
+        return steps;
+    }
+
+    if (auto v = getStepsNumber({p.x, p.y - 1}, to, k, map, visited, steps + 1); v  > -1) return v;
+    if (auto v = getStepsNumber({p.x, p.y + 1}, to, k, map, visited, steps + 1); v  > -1) return v;
+    if (auto v = getStepsNumber({p.x - 1, p.y}, to, k, map, visited, steps + 1); v  > -1) return v;
+    if (auto v = getStepsNumber({p.x + 1, p.y}, to, k, map, visited, steps + 1); v  > -1) return v;
+    return -1;
+};
+
+const auto getListOfAccessibleKeys = [](KEYS keys, Position startingPos, MAP map){
+    std::map<char, int32_t> accessibleKeys;
+    for (auto& entry: keys) {
+        char key_name = entry.first;
+        Position key_position = entry.second;
+        Visited v;
+        const auto val = getStepsNumber(startingPos, key_position, {}, map, v);
+        if (val > -1) {
+            accessibleKeys[key_name] = val;
+        }
+
+    }
+    return accessibleKeys;
+};
 }
 
 int main(int argc, char** argv)
@@ -157,20 +206,48 @@ int main(int argc, char** argv)
     //printData(input);
 
     auto map = input;
-    auto pos = getInitialPosition(input);
+    auto startingPosition = getInitialPosition(input);
     const auto locations = getKeysAndDoorsLocation(input);
     // for (auto &e: locations) {
     //     std::cout << e.first << " -> (" << e.second.x << ',' << e.second.y << ")\n";
     // }
     //std::cout << pos.x << ' ' << pos.y << std::endl;
 
-    map[pos.x][pos.y] = '.';
+    map[startingPosition.x][startingPosition.y] = '.';
     auto keys_ = keys;
-    Visited v;
-    traverse(pos, map, 0, v, keys_);
+    //Visited v;
+    //traverse(startingPosition, map, 0, v, keys_);
 
-    std::cout << "\n\nShortest: " << *steps_sum.begin() << '\n';
+    //std::cout << "\n\nShortest: " << *steps_sum.begin() << '\n';
 
-    //7864 - too high
+
+    const auto k = getListOfAccessibleKeys(keys_, startingPosition, map);
+    std::vector<char> initialSteps;
+    for (auto const& e: k) {
+        std::cout << e.first << " -> " << e.second << std::endl;
+        initialSteps.push_back(e.first);
+    }
+
+    uint64_t minimum = std::numeric_limits<uint64_t>::max();
+    std::vector<std::pair<uint64_t, std::string>> res;
+    do {
+        std::string order;
+        uint64_t sum = 0;
+        Position start = startingPosition;
+        for (auto key : initialSteps) {
+            order += key;
+            Visited v;
+            auto to = keys_[key];
+            sum += getStepsNumber(start, to, keys_, map, v);
+            start = to;
+        }
+        res.push_back(std::make_pair(sum, order));
+        //minimum = std::min(minimum, sum);
+    } while (std::next_permutation(initialSteps.begin(), initialSteps.end()));
+
+    for(auto& e: res) {
+        std::cout << e.first << " -> " << e.second << '\n';
+    }
+
     return 0;
 }
