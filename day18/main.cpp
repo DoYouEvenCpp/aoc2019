@@ -17,12 +17,15 @@
 #include <list>
 #include <fstream>
 #include <thread>
+#include <bitset>
 
 namespace {
 
 struct Position {
     std::size_t x;
     std::size_t y;
+    int32_t steps;
+    int32_t keys_;
     bool operator<(Position const& lhs) const noexcept {
         if(lhs.x > x) return true;
         else if (lhs.x == x) {
@@ -74,10 +77,6 @@ const auto getInitialPosition = [](auto& data) -> Position {
     return {};
 };
 
-const auto searchPossibleMovesFromPosition = [](auto& input, Position pos) -> std::list<Position> {
-    return {};
-};
-
 const auto getKeysAndDoorsLocation = [](auto& input){
     std::map<char, Position> locations;
     std::size_t i = 0, j = 0;
@@ -98,100 +97,56 @@ const auto getKeysAndDoorsLocation = [](auto& input){
     return locations;
 };
 
-void traverse(Position p, MAP& map, uint32_t counter, Visited& visited, KEYS keys) {
-    if (keys.size() == 0) {
-        return;
-    }
-    if (p.x >= map.size() || p.y >= map[0].size()) return;
-    if (map[p.x][p.y] == '#') return;
+int32_t bfs(MAP map, Position startingPos){
+    std::queue<Position> q;
+    std::set<std::tuple<int, int, int32_t>> visited;
 
-    char ch = map[p.x][p.y];
-    //commented code required for printing purposes, duh
-    auto tmp = ch;
+    std::vector<int> x_dir = {-1, 0 ,0, 1};
+    std::vector<int> y_dir = {0, -1 ,1, 0};
+    std::bitset<26> keys_collected;
 
-    if (ch >= 'a' && ch <= 'z'){
-        //std::cout << "\tGot key: " << ch << '\n';
-        keys.erase(ch);
-        tmp = '.';
-        if (keys.size() == 0) {
-            //std::cout << "\tFINISHED in " << counter << " steps\n";
-            steps_sum.insert(counter);
+
+    q.push(startingPos);
+    while (not q.empty()) {
+        auto m = q.front();
+        q.pop();
+
+        keys_collected = m.keys_;
+
+        if (keys_collected.count() == keys.size())
+            return m.steps;
+
+        for (int i = 0; i < 4; ++i) {
+
+            const int x = m.x + x_dir[i];
+            const auto y = m.y + y_dir[i];
+
+            if (x >= map.size() || y >= map[0].size()) continue;
+            const char c = map[x][y];
+            if (c == '#') continue;
+
+
+            if (visited.count(std::make_tuple(x, y, keys_collected.to_ulong()))) continue;
+
+            const auto cp = keys_collected;
+            if (c >= 'A' && c <= 'Z') {
+                if (!keys_collected.test(c - 'A')) continue;
+            }
+            else if (c >= 'a' && c <= 'z') {
+                if (!keys_collected.test(c - 'a')) {
+                    keys_collected.set(c-'a');
+                }
+            }
+
+            visited.emplace(x, y, keys_collected.to_ulong());
+            q.push({x, y, m.steps + 1, keys_collected.to_ulong()});
+            keys_collected = cp;
         }
-    }
-    else if (ch >= 'A' && ch <= 'Z') {
-        if (keys.count(ch + 32) == 1){
-            //key has not been yet collected
-            //can't open that very door
-            //return
-            return;
-        }
-        //std::cout << "\tOpening door " << ch << '\n';
-        tmp = '.';
+
     }
 
-    if (visited.count(p) > 0) {
-        if (visited[p] <= keys.size()) return;
-            visited[p] = keys.size();
-    }
-    else {
-        visited[p] = keys.size();
-    }
-
-    map[p.x][p.y] = '*';
-    printData(map);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    map[p.x][p.y] = ch;
-
-    traverse({p.x, p.y +1}, map, counter + 1, visited, keys);
-    traverse({p.x, p.y -1}, map, counter + 1, visited, keys);
-    traverse({p.x+1, p.y}, map, counter + 1, visited, keys);
-    traverse({p.x-1, p.y}, map, counter + 1, visited, keys);
-}
-
-
-int32_t getStepsNumber(Position p, Position to, KEYS k, MAP& map, Visited& visited, int32_t steps = 0){
-
-    char c = map[p.x][p.y];
-    if (p.x >= map.size() || p.y >= map[0].size()) return -1;
-    if (c == '#') return -1;
-
-    if (c >= 'A' && c <= 'Z') {
-        if (k.count(c + 32) == 0)
-            return -1;
-    }
-
-    if (visited.count(p) > 0) {
-        return -1;
-    }
-    visited[p] = 0;
-
-
-    if (p == to){
-        //std::cout << c << " after " << steps << " steps\n";
-        return steps;
-    }
-
-    if (auto v = getStepsNumber({p.x, p.y - 1}, to, k, map, visited, steps + 1); v  > -1) return v;
-    if (auto v = getStepsNumber({p.x, p.y + 1}, to, k, map, visited, steps + 1); v  > -1) return v;
-    if (auto v = getStepsNumber({p.x - 1, p.y}, to, k, map, visited, steps + 1); v  > -1) return v;
-    if (auto v = getStepsNumber({p.x + 1, p.y}, to, k, map, visited, steps + 1); v  > -1) return v;
     return -1;
-};
-
-const auto getListOfAccessibleKeys = [](KEYS keys, Position startingPos, MAP map){
-    std::map<char, int32_t> accessibleKeys;
-    for (auto& entry: keys) {
-        char key_name = entry.first;
-        Position key_position = entry.second;
-        Visited v;
-        const auto val = getStepsNumber(startingPos, key_position, {}, map, v);
-        if (val > -1) {
-            accessibleKeys[key_name] = val;
-        }
-
-    }
-    return accessibleKeys;
-};
+}
 }
 
 int main(int argc, char** argv)
@@ -208,46 +163,12 @@ int main(int argc, char** argv)
     auto map = input;
     auto startingPosition = getInitialPosition(input);
     const auto locations = getKeysAndDoorsLocation(input);
-    // for (auto &e: locations) {
-    //     std::cout << e.first << " -> (" << e.second.x << ',' << e.second.y << ")\n";
-    // }
-    //std::cout << pos.x << ' ' << pos.y << std::endl;
+
 
     map[startingPosition.x][startingPosition.y] = '.';
     auto keys_ = keys;
-    //Visited v;
-    //traverse(startingPosition, map, 0, v, keys_);
 
-    //std::cout << "\n\nShortest: " << *steps_sum.begin() << '\n';
-
-
-    const auto k = getListOfAccessibleKeys(keys_, startingPosition, map);
-    std::vector<char> initialSteps;
-    for (auto const& e: k) {
-        std::cout << e.first << " -> " << e.second << std::endl;
-        initialSteps.push_back(e.first);
-    }
-
-    uint64_t minimum = std::numeric_limits<uint64_t>::max();
-    std::vector<std::pair<uint64_t, std::string>> res;
-    do {
-        std::string order;
-        uint64_t sum = 0;
-        Position start = startingPosition;
-        for (auto key : initialSteps) {
-            order += key;
-            Visited v;
-            auto to = keys_[key];
-            sum += getStepsNumber(start, to, keys_, map, v);
-            start = to;
-        }
-        res.push_back(std::make_pair(sum, order));
-        //minimum = std::min(minimum, sum);
-    } while (std::next_permutation(initialSteps.begin(), initialSteps.end()));
-
-    for(auto& e: res) {
-        std::cout << e.first << " -> " << e.second << '\n';
-    }
+    std::cout << "First puzzle answer: " <<  bfs(map, startingPosition) << '\n';
 
     return 0;
 }
