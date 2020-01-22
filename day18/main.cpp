@@ -77,6 +77,14 @@ const auto getInitialPosition = [](auto& data) -> Position {
     return {};
 };
 
+const auto getInitialPositions = [](auto& data) {
+    std::vector<Position> res;
+    for (auto i = 0u; i < data.size(); ++i)
+        for (auto j = 0u; j < data[i].size(); ++j)
+            if (data[i][j] == '@') res.push_back({ i, j });
+    return res;
+};
+
 const auto getKeysAndDoorsLocation = [](auto& input){
     std::map<char, Position> locations;
     std::size_t i = 0, j = 0;
@@ -118,7 +126,7 @@ int32_t bfs(MAP map, Position startingPos){
 
         for (int i = 0; i < 4; ++i) {
 
-            const int x = m.x + x_dir[i];
+            const auto x = m.x + x_dir[i];
             const auto y = m.y + y_dir[i];
 
             if (x >= map.size() || y >= map[0].size()) continue;
@@ -139,7 +147,7 @@ int32_t bfs(MAP map, Position startingPos){
             }
 
             visited.emplace(x, y, keys_collected.to_ulong());
-            q.push({x, y, m.steps + 1, keys_collected.to_ulong()});
+            q.push({x, y, m.steps + 1, static_cast<int32_t>(keys_collected.to_ulong())});
             keys_collected = cp;
         }
 
@@ -164,11 +172,31 @@ int main(int argc, char** argv)
     auto startingPosition = getInitialPosition(input);
     const auto locations = getKeysAndDoorsLocation(input);
 
-
-    map[startingPosition.x][startingPosition.y] = '.';
     auto keys_ = keys;
 
-    std::cout << "First puzzle answer: " <<  bfs(map, startingPosition) << '\n';
+    //std::cout << "First puzzle answer: " <<  bfs(map, startingPosition) << '\n';
 
+
+    map[startingPosition.x][startingPosition.y] = '#';
+    map[startingPosition.x - 1][startingPosition.y] = '#';
+    map[startingPosition.x+1][startingPosition.y] = '#';
+    map[startingPosition.x][startingPosition.y - 1] = '#';
+    map[startingPosition.x][startingPosition.y + 1] = '#';
+    map[startingPosition.x + 1][startingPosition.y - 1] = '@';
+    map[startingPosition.x + 1][startingPosition.y + 1] = '@';
+    map[startingPosition.x - 1][startingPosition.y + 1] = '@';
+    map[startingPosition.x - 1][startingPosition.y - 1] = '@';
+
+    auto positions = getInitialPositions(map);
+
+    for (auto p : positions) {
+        std::cout << p.x << '-' << p.y << '\n';
+    }
+
+    int32_t sum = 0;
+
+    for (auto i = 0; i < 4; ++i) {
+        sum += bfs(map, positions[i]);
+    }
     return 0;
 }
