@@ -105,13 +105,14 @@ const auto getKeysAndDoorsLocation = [](auto& input){
     return locations;
 };
 
-int32_t bfs(MAP map, Position startingPos){
+int32_t bfs(MAP map, Position startingPos, int32_t expectedSize = -1){
     std::queue<Position> q;
     std::set<std::tuple<int, int, int32_t>> visited;
 
     std::vector<int> x_dir = {-1, 0 ,0, 1};
     std::vector<int> y_dir = {0, -1 ,1, 0};
     std::bitset<26> keys_collected;
+    const auto total_keys = expectedSize == -1? keys.size():expectedSize;
 
 
     q.push(startingPos);
@@ -121,7 +122,7 @@ int32_t bfs(MAP map, Position startingPos){
 
         keys_collected = m.keys_;
 
-        if (keys_collected.count() == keys.size())
+        if (keys_collected.count() == total_keys)
             return m.steps;
 
         for (int i = 0; i < 4; ++i) {
@@ -155,6 +156,41 @@ int32_t bfs(MAP map, Position startingPos){
 
     return -1;
 }
+
+const auto collectDataAndIgnoreDoors = [](MAP& map, Position pos){
+    const auto max_x = map.size();
+    const auto max_y = map[0].size();
+
+    const auto x_start = (max_x / 2) > pos.x?0:pos.x-1;
+    const auto y_start = (max_y / 2) > pos.y?0:pos.y-1;
+
+    const auto x_end = x_start == 0?pos.x+1:max_x;
+    const auto y_end = y_start == 0?pos.y+1:max_y;
+
+    std::vector<char> doors;
+    std::vector<char> k;
+    for (auto i = x_start; i < x_end; ++i) {
+        for (auto j = y_start; j < y_end; ++j){
+            if (map[i][j] >= 'a' && map[i][j] <= 'z') k.push_back(map[i][j]);
+            else if (map[i][j] >= 'A' && map[i][j] <= 'Z') doors.push_back(map[i][j]);
+        }
+    }
+
+    for (auto i = x_start; i < x_end; ++i) {
+        for (auto j = y_start; j < y_end; ++j){
+            if (map[i][j] >= 'A' && map[i][j] <= 'Z') {
+                const auto ch = map[i][j];
+                if (std::none_of(k.begin(), k.end(), [ch](char c){return c == ch+32;}))
+                    if (std::any_of(keys.begin(), keys.end(), [ch](auto const& c){return c.first == ch+32;})) {
+                        map[i][j] = '.';
+                    }
+            }
+        }
+    }
+
+    return std::tuple(k, doors);
+};
+
 }
 
 int main(int argc, char** argv)
@@ -174,8 +210,7 @@ int main(int argc, char** argv)
 
     auto keys_ = keys;
 
-    //std::cout << "First puzzle answer: " <<  bfs(map, startingPosition) << '\n';
-
+    std::cout << "First puzzle answer: " <<  bfs(map, startingPosition) << '\n';
 
     map[startingPosition.x][startingPosition.y] = '#';
     map[startingPosition.x - 1][startingPosition.y] = '#';
@@ -189,14 +224,19 @@ int main(int argc, char** argv)
 
     auto positions = getInitialPositions(map);
 
+
+    //int -> (keys, doors)
+    std::map<int, std::tuple<std::vector<char>, std::vector<char>>> tmp;
+    int i = 0;
     for (auto p : positions) {
-        std::cout << p.x << '-' << p.y << '\n';
+        tmp[i++] = collectDataAndIgnoreDoors(map, p);
     }
 
     int32_t sum = 0;
 
     for (auto i = 0; i < 4; ++i) {
-        sum += bfs(map, positions[i]);
+        sum += bfs(map, positions[i], std::get<0>(tmp[i]).size());
     }
+    std::cout << "second puzzle: " << sum << '\n';
     return 0;
 }
