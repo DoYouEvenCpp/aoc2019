@@ -82,7 +82,7 @@ private:
 
 public:
 std::queue<int64_t> instructions;
-int idle {0};
+bool idle {false};
 public:
     IntCodeComputer() = default;
 
@@ -188,7 +188,7 @@ public:
                 else if (instructions.empty()) {
                     if (q.empty()) {
                         shouldBrake = true;
-                        idle += 1;
+                        idle = true;
                     }
                     else {
                         auto m = q.front();
@@ -196,11 +196,11 @@ public:
                             q.pop();
                             val = m.x;
                             instructions.push(m.y);
-                            idle = 0;
+                            idle = false;
                         }
                         else {
                             shouldBrake = true;
-                            idle += 1;
+                            idle = true;
                         }
                     }
                 }
@@ -396,7 +396,7 @@ struct Router{
                 //commented out
                 //std::cout << "First puzzle answer: " << NAT.y << '\n';
                 //return;
-                if (std::all_of(network.cbegin(), network.cend(), [](IntCodeComputer const& pc){return pc.idle > 2;})) {
+                if (std::all_of(network.cbegin(), network.cend(), [](IntCodeComputer const& pc){return pc.idle;})) {
                     std::cout << "All idle, sending to 0 " << NAT.x << ' ' << NAT.y << '\n';
                     q.push({0, NAT.x, NAT.y});
                     if (auto[it, isInserted] = secondPuzzle.insert(NAT.y); !isInserted) {
