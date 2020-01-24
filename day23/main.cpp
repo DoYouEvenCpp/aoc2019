@@ -81,7 +81,7 @@ private:
     int64_t addr;
 
 public:
-std::queue<int> instructions;
+std::queue<int64_t> instructions;
 public:
     IntCodeComputer() = default;
 
