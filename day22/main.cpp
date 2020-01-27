@@ -19,6 +19,7 @@
 #include <chrono>
 #include <unordered_set>
 #include <unordered_map>
+#include <numeric>
 
 
 namespace{
@@ -32,7 +33,8 @@ enum class task {
     inc
 };
 
-using data_type = std::vector<std::pair<task, int>>;
+using data_type = std::vector<std::pair<task, int32_t>>;
+using deck = std::vector<int32_t>;
 
 const auto loadData = [](auto path){
     data_type res;
@@ -52,6 +54,26 @@ const auto loadData = [](auto path){
     fs.close();
     return res;
 };
+
+const auto handleNewStack = [](deck& d) {
+    std::reverse(d.begin(), d.end());
+};
+
+const auto handleCut = [](deck& d, const auto len) {
+    if (len > 0) std::rotate(d.begin(), d.begin() + len, d.end());
+    else std::rotate(d.rbegin(), d.rbegin() + std::abs(len), d.rend());
+};
+
+const auto handleIncrement = [](deck& d, const auto step) {
+    deck res (d.size());
+    std::size_t j = 0;
+    for (auto i = 0u; i < d.size(); ++i) {
+        res[j] = d[i];
+        j += step;
+        j %= d.size();
+    }
+    d = res;
+};
 }
 
 int main(int argc, char** argv) {
@@ -62,4 +84,22 @@ int main(int argc, char** argv) {
 
     const std::string path = argv[1];
     const auto data = loadData(path);
+    std::vector<int32_t> v(10007);
+    std::iota(v.begin(), v.end(), 0);
+
+
+    for (auto& e: data) {
+        if (e.first == task::stack) {
+            handleNewStack(v);
+        }
+        else if (e.first == task::cut) {
+            handleCut(v, e.second);
+        }
+        else if (e.first == task::inc) {
+            handleIncrement(v, e.second);
+        }
+    }
+
+    std::cout << "First puzzle: " << std::distance(v.begin(), std::find(v.begin(), v.end(), 2019)) << '\n';
+    return 0;
 }
