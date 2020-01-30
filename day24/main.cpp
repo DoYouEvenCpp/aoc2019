@@ -77,6 +77,95 @@ const auto getBugsNumberInAdjacentTiles = [](data_type& d, auto x, auto y) {
         +  visitTile(d, x, y + 1);
 };
 
+
+const auto getBugsNumberInTilesInner = [](data_type& current, data_type& adjacent, auto x, auto y) {
+    int sum = 0;
+    //this gonna be gut.
+    //8  == 2,1
+    //12 == 1,2
+    //18 == 2,3
+    //14 == 3,2
+
+    if (x == 0 && y == 0){
+        sum += visitTile(adjacent, 2, 1);
+        sum += visitTile(current, x, y+1);
+        sum += visitTile(adjacent, 1, 2);
+        sum += visitTile(current, x+1, y);
+    }
+    else if (x == 0 && y == 4){
+        sum += visitTile(adjacent, 2, 1);
+        sum += visitTile(current, x, y+1);
+        sum += visitTile(current, x-1,y);
+        sum += visitTile(adjacent, 3,2);
+    }
+    else if (x == 4 && y == 0) {
+        sum += visitTile(current, x , y -1);
+        sum += visitTile(adjacent, 2,3);
+        sum += visitTile(adjacent, 1,2);
+        sum += visitTile(current, x+1, y);
+    }
+    else if (x == 4 && y == 4) {
+        sum += visitTile(current, x, y-1);
+        sum += visitTile(adjacent, 2,3);
+        sum += visitTile(current, x-1, y);
+        sum += visitTile(adjacent, 3,2);
+    }
+    else {
+        sum += visitTile(current, x-1, y);
+        sum += visitTile(current, x+1, y);
+        sum += visitTile(current, x, y-1);
+        sum += visitTile(current, x, y+1);
+    }
+
+    return sum;
+};
+
+const auto getBugsNumberInTilesoutter = [](data_type& current, data_type& outter, auto x, auto y) {
+    int sum = 0;
+    //this gonna be gut.
+    //8  == 2,1
+    //12 == 1,2
+    //18 == 2,3
+    //14 == 3,2
+
+    if (x == 2 && y == 1){ //8
+        sum += visitTile(current, x, y-1);
+        sum += visitTile(current, x-1, y);
+        sum += visitTile(current, x+1, y);
+        for (auto i = 0; i < 5; ++i) {
+            sum += visitTile(outter, 0, i);
+        }
+
+    }
+    else if (x == 2 && y == 3){ //18
+        sum += visitTile(current, x, y+1);
+        sum += visitTile(current, x+1, y);
+        sum += visitTile(current, x-1, y);
+        for (auto i = 0; i < 5; ++i) {
+            sum += visitTile(outter, 4, i);
+        }
+    }
+    else if (x == 1 && y == 2){ //12
+        sum += visitTile(current, x, y-1);
+        sum += visitTile(current, x, y+1);
+        sum += visitTile(current, x-1, y);
+        for (auto i = 0; i < 5; ++i) {
+            sum += visitTile(outter, i, 0);
+        }
+    }
+
+    else if (x == 3 && y == 2){ //14
+        sum += visitTile(current, x, y-1);
+        sum += visitTile(current, x, y+1);
+        sum += visitTile(current, x+1, y);
+        for (auto i = 0; i < 5; ++i) {
+            sum += visitTile(outter, 4, i);
+        }
+    }
+
+    return sum;
+};
+
 const auto iterate = [](data_type& d) {
     auto tmp = d;
     for (auto i = 0u; i < d.size(); ++i) {
@@ -126,6 +215,7 @@ void iterateWorld(int32_t depth, world& w) {
                 if (not w.count(depth-1)) {
                     w[depth-1] = getEmptyGrid();
                 }
+                iterateWorld(depth - 1, w);
             }
             else {
                 //(2,1), (1,2), (2,3), (3,2)
