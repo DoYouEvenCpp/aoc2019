@@ -25,6 +25,14 @@
 namespace{
 
 using data_type = std::vector<std::vector<char>>;
+using level = int32_t;
+using world = std::map<level, data_type>;
+
+const auto getEmptyGrid = []{
+    std::vector<std::vector<char>> g(5, std::vector<char>(5, '.'));
+    g[2][2] = '?';
+    return g;
+};
 
 const auto loadData = [](auto path){
     data_type res;
@@ -105,6 +113,44 @@ const auto calculateBiodiversity = [](data_type& d) {
     }
     return sum;
 };
+
+void iterateWorld(int32_t depth, world& w) {
+    if (not w.count(depth)) return;
+
+    auto& d = w[depth];
+    for (auto i = 0; i < d.size(); ++i) {
+        for (auto j = 0; j < d[0].size(); ++j) {
+            //? -> w górę
+            //narożne -> w dół
+            if (i == 0 || i == d.size() || j == 0 || j == d[0].size()) {
+                if (not w.count(depth-1)) {
+                    w[depth-1] = getEmptyGrid();
+                }
+            }
+            else {
+                //(2,1), (1,2), (2,3), (3,2)
+                if (i == 2 && j == 1) {
+                }
+                else if (i == 1 && j == 2) {
+                }
+                else if (i == 2 && j == 3) {
+                }
+                else if (i == 3 && j == 2) {
+                }
+                else if (i == 2 && j == 2) {
+                    //?
+                    //going up
+                    if (not w.count(depth)) {
+                        w[depth+1] = getEmptyGrid();
+                    }
+                }
+                else {
+                    //iterate
+                }
+            }
+        }
+    }
+}
 }
 
 int main(int argc, char** argv) {
@@ -112,7 +158,8 @@ int main(int argc, char** argv) {
         std::cout << "too few parameters!\n";
         return -1;
     }
-    auto data = loadData(argv[1]);
+    auto input = loadData(argv[1]);
+    auto data = input;
     std::set<std::string> layouts;
 
     do {
@@ -123,5 +170,14 @@ int main(int argc, char** argv) {
             break;
         }
     } while(true);
+
+    world w;
+    input[2][2] = '?';
+    // for (auto i = -100; i < 100; ++i) {
+    //     w[i] = ;
+    //     w[i][2][2] = '?';
+    // }
+    w[0] = input;
+
     return 0;
 }
