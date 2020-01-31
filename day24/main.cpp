@@ -87,22 +87,22 @@ const auto getBugsNumberInTilesInner = [](data_type& current, data_type& adjacen
     //14 == 3,2
 
     if (x == 0 && y == 0){
-        sum += visitTile(adjacent, 2, 1);
-        sum += visitTile(current, x, y+1);
-        sum += visitTile(adjacent, 1, 2);
-        sum += visitTile(current, x+1, y);
+        sum += visitTile(adjacent, 2, 1);   //N
+        sum += visitTile(current, x, y+1);  //S
+        sum += visitTile(adjacent, 1, 2);   //W
+        sum += visitTile(current, x+1, y);  //E
     }
     else if (x == 0 && y == 4){
-        sum += visitTile(adjacent, 2, 1);
-        sum += visitTile(current, x, y+1);
-        sum += visitTile(current, x-1,y);
-        sum += visitTile(adjacent, 3,2);
+        sum += visitTile(current, x, y-1);  //N
+        sum += visitTile(adjacent, 2, 3);   //S
+        sum += visitTile(adjacent, 1,2);    //W
+        sum += visitTile(current, x+1,y);   //E
     }
     else if (x == 4 && y == 0) {
-        sum += visitTile(current, x , y -1);
-        sum += visitTile(adjacent, 2,3);
-        sum += visitTile(adjacent, 1,2);
-        sum += visitTile(current, x+1, y);
+        sum += visitTile(adjacent, 2,1);    //N
+        sum += visitTile(current, x , y+1); //S
+        sum += visitTile(current, x-1, y);  //W
+        sum += visitTile(adjacent, 3,2);    //E
     }
     else if (x == 4 && y == 4) {
         sum += visitTile(current, x, y-1);
@@ -110,17 +110,35 @@ const auto getBugsNumberInTilesInner = [](data_type& current, data_type& adjacen
         sum += visitTile(current, x-1, y);
         sum += visitTile(adjacent, 3,2);
     }
-    else {
-        sum += visitTile(current, x-1, y);
-        sum += visitTile(current, x+1, y);
-        sum += visitTile(current, x, y-1);
-        sum += visitTile(current, x, y+1);
+    else if ((x == 0 && y == 1) || (x == 0 && y == 2) || (x == 0 && y == 3)) {
+        sum += visitTile(current, x, y-1);  //N
+        sum += visitTile(current, x, y+1);  //S
+        sum += visitTile(adjacent, 1, 2);   //W
+        sum += visitTile(current, x+1, y);  //E
+    }
+    else if ((x == 4 && y == 1) || (x == 4 && y == 2) || (x == 4 && y == 3)) {
+        sum += visitTile(current, x, y-1);  //N
+        sum += visitTile(current, x, y+1);  //S
+        sum += visitTile(current, x-1, y);  //W
+        sum += visitTile(adjacent, 3, 2);   //E
+    }
+    else if ((x == 1 && y == 0) || (x == 2 && y == 0) || (x == 3 && y == 0)) {
+        sum += visitTile(adjacent, 2, 1);   //N
+        sum += visitTile(current, x, y+1);  //S
+        sum += visitTile(current, x-1, y);  //W
+        sum += visitTile(current, x+1, y);  //E
+    }
+    else if ((x == 1 && y == 4) || (x == 2 && y == 4) || (x == 3 && y == 4)) {
+        sum += visitTile(current, x, y-1);  //N
+        sum += visitTile(adjacent, 2, 3);   //S
+        sum += visitTile(current, x-1, y);  //W
+        sum += visitTile(current, x+1, y);  //E
     }
 
     return sum;
 };
 
-const auto getBugsNumberInTilesoutter = [](data_type& current, data_type& outter, auto x, auto y) {
+const auto getBugsNumberInTilesOutter = [](data_type& current, data_type& outter, auto x, auto y) {
     int sum = 0;
     //this gonna be gut.
     //8  == 2,1
@@ -133,7 +151,7 @@ const auto getBugsNumberInTilesoutter = [](data_type& current, data_type& outter
         sum += visitTile(current, x-1, y);
         sum += visitTile(current, x+1, y);
         for (auto i = 0; i < 5; ++i) {
-            sum += visitTile(outter, 0, i);
+            sum += visitTile(outter, i, 0);
         }
 
     }
@@ -142,7 +160,7 @@ const auto getBugsNumberInTilesoutter = [](data_type& current, data_type& outter
         sum += visitTile(current, x+1, y);
         sum += visitTile(current, x-1, y);
         for (auto i = 0; i < 5; ++i) {
-            sum += visitTile(outter, 4, i);
+            sum += visitTile(outter, i, 4);
         }
     }
     else if (x == 1 && y == 2){ //12
@@ -150,7 +168,7 @@ const auto getBugsNumberInTilesoutter = [](data_type& current, data_type& outter
         sum += visitTile(current, x, y+1);
         sum += visitTile(current, x-1, y);
         for (auto i = 0; i < 5; ++i) {
-            sum += visitTile(outter, i, 0);
+            sum += visitTile(outter, 0, i);
         }
     }
 
@@ -203,48 +221,69 @@ const auto calculateBiodiversity = [](data_type& d) {
     return sum;
 };
 
-void iterateWorld(int32_t depth, world& w) {
-    if (not w.count(depth)) return;
-
-    auto& d = w[depth];
-    for (auto i = 0; i < d.size(); ++i) {
-        for (auto j = 0; j < d[0].size(); ++j) {
-            //? -> w górę
-            //narożne -> w dół
-            if (i == 0 || i == d.size() || j == 0 || j == d[0].size()) {
-                if (not w.count(depth-1)) {
-                    w[depth-1] = getEmptyGrid();
-                }
-                iterateWorld(depth - 1, w);
-            }
-            else {
-                //(2,1), (1,2), (2,3), (3,2)
-                if (i == 2 && j == 1) {
-                }
-                else if (i == 1 && j == 2) {
-                }
-                else if (i == 2 && j == 3) {
-                }
-                else if (i == 3 && j == 2) {
-                }
-                else if (i == 2 && j == 2) {
-                    //?
-                    //going up
-                    if (not w.count(depth)) {
-                        w[depth+1] = getEmptyGrid();
-                    }
-                }
-                else {
-                    //iterate
-                }
+const auto calculateTotalNumberOfBugs = [](world& w){
+    auto sum = 0;
+    for (auto& e: w){
+        for (auto& line: e.second) {
+            for (auto e: line) {
+                sum += e == '#';
             }
         }
     }
+    return sum;
+};
+
+void iterateWorld(world& w) {
+    auto copy = w;
+
+    for (auto lvl = -100; lvl <= 100; ++lvl){
+        auto& d = w[lvl];
+        auto tmp = d;
+        for (auto i = 0u; i < d.size(); ++i) {
+            for (auto j = 0u; j < d[0].size(); ++j) {
+                if (i == 0 || i == d.size() || j == 0 || j == d[0].size()) {
+                    if (not w.count(lvl-1)) {
+                        w[lvl-1] = getEmptyGrid();
+                    }
+                    auto bugs = getBugsNumberInTilesInner(d, w[lvl-1], i, j);
+
+                    if (d[i][j] == '#'){
+                        if (bugs != 1) tmp[i][j] = '.';
+                    }
+                    else if (d[i][j] == '.') {
+                        if (bugs == 1 || bugs == 2) tmp[i][j] = '#';
+                    }
+                }
+                else if ((i == 1 && j == 2) || (i == 2 && j == 1) || (i == 2 && j == 3) || (i == 3 && j == 2)) {
+                    if (not w.count(lvl+1))
+                        w[lvl+1] = getEmptyGrid();
+                    auto bugs = getBugsNumberInTilesOutter(d, w[lvl+1], i, j);
+                    if (d[i][j] == '#'){
+                        if (bugs != 1) tmp[i][j] = '.';
+                    }
+                    else if (d[i][j] == '.') {
+                        if (bugs == 1 || bugs == 2) tmp[i][j] = '#';
+                    }
+                }
+                else {
+                    const auto bugs = getBugsNumberInAdjacentTiles(d, i, j);
+                    if (d[i][j] == '#'){
+                        if (bugs != 1) tmp[i][j] = '.';
+                    }
+                    else if (d[i][j] == '.') {
+                        if (bugs == 1 || bugs == 2) tmp[i][j] = '#';
+                    }
+                }
+            }
+        }
+        copy[lvl] = tmp;
+    }
+    w = copy;
 }
 }
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
+    if (argc < 3) {
         std::cout << "too few parameters!\n";
         return -1;
     }
@@ -263,11 +302,30 @@ int main(int argc, char** argv) {
 
     world w;
     input[2][2] = '?';
-    // for (auto i = -100; i < 100; ++i) {
-    //     w[i] = ;
-    //     w[i][2][2] = '?';
-    // }
+    for (auto i = -100; i <= 100; ++i) {
+        w[i] = getEmptyGrid();
+        w[i][2][2] = '?';
+    }
     w[0] = input;
+    for (auto i = 0; i < std::stoi(argv[2]); ++i) {
+        iterateWorld(w);
 
+        // for (auto i = -5; i <= 5; ++i){
+        //     std::cout << "Depth: " << i << '\n';
+        //     print(w[i]);
+        //     std::cout << '\n';
+        // }
+        // getchar();
+
+    }
+
+    for (auto i = -5; i <= 5; ++i){
+        std::cout << "Depth: " << i << '\n';
+        print(w[i]);
+        std::cout << '\n';
+    }
+    std::cout << "Second puzzle asnwer: " << calculateTotalNumberOfBugs(w) << '\n';
+
+    //2021 too low
     return 0;
 }
