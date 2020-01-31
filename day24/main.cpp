@@ -239,9 +239,9 @@ void iterateWorld(world& w) {
     for (auto lvl = -100; lvl <= 100; ++lvl){
         auto& d = w[lvl];
         auto tmp = d;
-        for (auto i = 0u; i < d.size(); ++i) {
-            for (auto j = 0u; j < d[0].size(); ++j) {
-                if (i == 0 || i == d.size() || j == 0 || j == d[0].size()) {
+        for (auto i = 0u; i < 5; ++i) {
+            for (auto j = 0u; j < 5; ++j) {
+                if (i == 0 || i == 4 || j == 0 || j == 4) {
                     if (not w.count(lvl-1)) {
                         w[lvl-1] = getEmptyGrid();
                     }
@@ -265,7 +265,7 @@ void iterateWorld(world& w) {
                         if (bugs == 1 || bugs == 2) tmp[i][j] = '#';
                     }
                 }
-                else {
+                else if ((i == 1 && j == 1) || (i == 1 && j == 3) || (i == 3 && j == 1) || (i == 3 && j == 3)) {
                     const auto bugs = getBugsNumberInAdjacentTiles(d, i, j);
                     if (d[i][j] == '#'){
                         if (bugs != 1) tmp[i][j] = '.';
@@ -319,11 +319,11 @@ int main(int argc, char** argv) {
 
     }
 
-    for (auto i = -5; i <= 5; ++i){
-        std::cout << "Depth: " << i << '\n';
-        print(w[i]);
-        std::cout << '\n';
-    }
+    // for (auto i = -5; i <= 5; ++i){
+    //     std::cout << "Depth: " << i << '\n';
+    //     print(w[i]);
+    //     std::cout << '\n';
+    // }
     std::cout << "Second puzzle asnwer: " << calculateTotalNumberOfBugs(w) << '\n';
 
     //2021 too low
