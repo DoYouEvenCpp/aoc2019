@@ -23,6 +23,8 @@ namespace {
 struct Position {
     std::size_t x;
     std::size_t y;
+    int steps;
+    std::set<std::tuple<int, int>> visited;
     bool operator==(Position const& o) const {
         return o.x == x && o.y == y;
     }
@@ -32,7 +34,7 @@ struct Portal {
     Position out;
     Position in;
 };
-struct Node{
+struct Node {
     std::string element;
     std::size_t range;
     Position pos;
@@ -50,7 +52,7 @@ std::unordered_set<std::string> visited;
 std::size_t range = 0;
 
 
-const auto loadData = [](auto path){
+const auto loadData = [](auto path) {
     std::vector<std::vector<char>> res;
     {
         char ch;
@@ -73,25 +75,25 @@ const auto loadData = [](auto path){
 };
 const auto printData = [](auto& data) {
     std::cout << "\n\tLEVEL: " << level << '\n';
-    for (auto& line: data) {
-        for (auto ch: line)
+    for (auto& line : data) {
+        for (auto ch : line)
             std::cout << ch;
     }
 };
-const auto findPosition = [](auto& input, char mark, char otherMark) -> Position{
+const auto findPosition = [](auto& input, char mark, char otherMark) -> Position {
     std::vector<Position> pos;
     for (auto i = 0u; i < input.size(); ++i) {
         if (pos.size() == 2) break;
         for (auto j = 0u; j < input[i].size(); ++j) {
             if (input[i][j] == mark) {
-                if (input[i+1][j] == otherMark) {
-                    pos.push_back({i,j});
-                    pos.push_back({i+1,j});
+                if (input[i + 1][j] == otherMark) {
+                    pos.push_back({ i,j });
+                    pos.push_back({ i + 1,j });
                     break;
                 }
-                else if (input[i][j+1] == otherMark) {
-                    pos.push_back({i,j});
-                    pos.push_back({i,j+1});
+                else if (input[i][j + 1] == otherMark) {
+                    pos.push_back({ i,j });
+                    pos.push_back({ i,j + 1 });
                     break;
                 }
             }
@@ -104,39 +106,39 @@ const auto findPosition = [](auto& input, char mark, char otherMark) -> Position
         //horizontal
         if (first.y > 1)
             if (input[first.x][first.y - 1] == '.')
-                return {first.x, first.y-1}; // .AA
+                return { first.x, first.y - 1 }; // .AA
         if (input[first.x][second.y + 1] == '.')
-            return {first.x, second.y+1}; // AA.
+            return { first.x, second.y + 1 }; // AA.
     }
     else { //vertical
         if (first.x > 1)                            // .
-            if (input[first.x-1][first.y] == '.')   // A
-                return {first.x-1, first.y};        // A
+            if (input[first.x - 1][first.y] == '.')   // A
+                return { first.x - 1, first.y };        // A
 
 
-        if (input[second.x+1][first.y] == '.')      // A
-            return {second.x+1, first.y};           // A
+        if (input[second.x + 1][first.y] == '.')      // A
+            return { second.x + 1, first.y };           // A
     }                                               // .
     assert(false);
     return {};
 };
-const auto getStartingPosition = [](auto& input) -> Position{
+const auto getStartingPosition = [](auto& input) -> Position {
     return findPosition(input, 'A', 'A');
 };
-const auto getEndingPos = [](auto& input) -> Position{
+const auto getEndingPos = [](auto& input) -> Position {
     return findPosition(input, 'Z', 'Z');
 };
 const auto searchPortals = [](auto const& input) {
     const auto width = input[0].size();
     //scan for horizontal ones
     for (auto i = 0u; i < input.size(); ++i) {
-        for (auto j = 0u; j < input[i].size()- 1; ++j) {
+        for (auto j = 0u; j < input[i].size() - 1; ++j) {
             if ((input[i][j] >= 'A' && input[i][j] <= 'Z') && (input[i][j + 1] >= 'A' && input[i][j + 1] <= 'Z')) {
                 const std::size_t x = i;
                 std::size_t y = 0;
                 if (j > 1)
                     if (input[i][j - 1] == '.') {
-                        y = j - 1;
+                        y = j-1;
                     }
                 if (input[i][j + 2] == '.') {
                     y = j + 2;
@@ -160,7 +162,7 @@ const auto searchPortals = [](auto const& input) {
                 const std::size_t y = i;
                 if (j > 1)
                     if (input[j - 1][i] == '.') {
-                        x = j - 1;
+                        x = j-1;
                     }
                 if (j < input.size() - 2)
                     if (input[j + 2][i] == '.') {
@@ -168,7 +170,7 @@ const auto searchPortals = [](auto const& input) {
                     }
                 std::string portalName;
                 portalName += input[j][i];
-                portalName += input[j+1][i];
+                portalName += input[j + 1][i];
 
                 if (j == 0 || j == input.size() - 2)
                     m[portalName].out = { x, y };
@@ -177,13 +179,13 @@ const auto searchPortals = [](auto const& input) {
             }
         }
     }
-    if (m["AA"].in == Position{0,0}) {
+    if (m["AA"].in == Position{ 0,0 }) {
         m["AA"].in = m["AA"].out;
     }
     else
         m["AA"].out = m["AA"].in;
 
-    if (m["ZZ"].in == Position{0,0}) {
+    if (m["ZZ"].in == Position{ 0,0 }) {
         m["ZZ"].in = m["ZZ"].out;
     }
     else
@@ -239,7 +241,7 @@ std::size_t searchPossibleMovesFromPosition(std::string from, Position pos, Posi
                     yy = it->second.in.y;
                     if (level > 0)
                         --level;
-                    std::cout << "Return to level " << level << " through " << current <<  std::endl;
+                    std::cout << "Return to level " << level << " through " << current << std::endl;
                     range += 1;
                 }
                 searchPossibleMovesFromPosition(current, { xx, yy }, end);
@@ -252,8 +254,8 @@ std::size_t searchPossibleMovesFromPosition(std::string from, Position pos, Posi
     }
 
 
-    // printData(maps[level]);
-    // std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    printData(maps[level]);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     // std::getchar();
 
     auto sum = 0;
@@ -268,6 +270,73 @@ std::size_t searchPossibleMovesFromPosition(std::string from, Position pos, Posi
     }
     return range + sum;
 };
+
+int32_t bfs(map_type map, Position startingPos) {
+    std::queue<Position> q;
+    std::set<std::tuple<int, int>> visited;
+
+    std::array<int, 4> x_dir = { -1, 0 ,0, 1 };
+    std::array<int, 4> y_dir = { 0, -1 ,1, 0 };
+
+    visited.emplace(startingPos.x, startingPos.y);
+    q.push({ startingPos.x, startingPos.y, 0, visited });
+    while (not q.empty()) {
+        auto move = q.front();
+        q.pop();
+
+        auto v = move.visited;
+
+        if (m["ZZ"].in == move) {
+            std::cout << "FINISHED in " << move.steps << '\n';
+            continue;
+        }
+
+        const auto v_copy = v;
+        for (int i = 0; i < 4; ++i) {
+
+            auto x = move.x + x_dir[i];
+            auto y = move.y + y_dir[i];
+
+            if (x >= map.size() || y >= map[0].size()) continue;
+            const char c = map[x][y];
+            if (c == '#' || c == ' ') continue;
+            bool flag = false;
+            if (c == '.' || (c >= 'B' && c <= 'Y')) {
+                if (c >= 'B' && c <= 'Y') {
+                    auto it = std::find_if(m.begin(), m.end(), [pos = move](auto const& p) {
+                        return p.second.in == pos || p.second.out == pos; });
+                    if (it != m.cend() && it->first != "AA") {
+                        if (move == it->second.in) {
+                            x = it->second.out.x;
+                            y = it->second.out.y;
+                        }
+                        else if (move == it->second.out) {
+                            x = it->second.in.x;
+                            y = it->second.in.y;
+                        }
+                        flag = true;
+                    }
+                }
+
+                if (v.count(std::make_tuple(x, y))) continue;
+
+                /*map[x][y] = '*';
+                printData(map);
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                map[x][y] = c;*/
+
+                v.emplace(x, y);
+                if (flag)
+                    v.emplace(move.x + x_dir[i], move.y + y_dir[i]);
+                q.push({ x, y, move.steps + 1 , v});
+                v = v_copy;
+                if (flag) break;
+            }
+        }
+
+    }
+    return -1;
+}
 }
 
 int main(int argc, char** argv)
@@ -278,7 +347,7 @@ int main(int argc, char** argv)
     }
 
     const std::string path = argv[1];
-    //const  std::string path = "C:\\Users\\staho\\projects\\aoc2019\\_sln\\ConsoleApplication1\\x64\\Debug\\test1";
+    //const std::string path = "C:\\Users\\staho\\projects\\aoc2019\\_sln\\ConsoleApplication1\\x64\\Debug\\test1";
     auto input = loadData(path);
     auto startingPos = getStartingPosition(input);
     auto ending = getEndingPos(input);
@@ -296,7 +365,8 @@ int main(int argc, char** argv)
         ranges.push_back(0);
     }
     map = input;
-    searchPossibleMovesFromPosition("AA", startingPos, ending);
+    //searchPossibleMovesFromPosition("AA", startingPos, ending);
+    bfs(map, startingPos);
 
     //516 - OK
     return 0;
