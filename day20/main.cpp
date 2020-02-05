@@ -24,9 +24,7 @@ struct Position {
     std::size_t x;
     std::size_t y;
     int steps;
-    //bool operator==(Position const& o) const {
-        //return o.x == x && o.y == y;
-    //}
+    int level;
 };
 
 bool operator == (Position a, Position b) { return a.x == b.x && a.y == b.y; }
@@ -36,23 +34,13 @@ struct Portal {
     Position out;
     Position in;
 };
-struct Node {
-    std::string element;
-    std::size_t range;
-    Position pos;
-};
 
 
 using map_type = std::vector<std::vector<char>>;
 std::map<std::string, Portal> m;
-std::map<std::string, std::list<Node>> tree;
-std::list<Node> nodes;
 std::vector<map_type> maps;
-std::vector<size_t> ranges;
-std::size_t level = 0;
-std::unordered_set<std::string> visited;
-std::size_t range = 0;
 std::map<Position, Position> portals;
+std::map<Position, int> depth_change;
 
 
 const auto loadData = [](auto path) {
@@ -76,11 +64,18 @@ const auto loadData = [](auto path) {
     }
     return res;
 };
-const auto printData = [](auto& data) {
+const auto printData = [](auto& data, int level, int x=0, int y=0, char c=0) {
+    if (x != 0 && y != 0)
+        data[x][y] = '#';
+
     std::cout << "\n\tLEVEL: " << level << '\n';
     for (auto& line : data) {
         for (auto ch : line)
             std::cout << ch;
+    }
+    if (x != 0 && y != 0){
+        data[x][y] = c;
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 };
 const auto findPosition = [](auto& input, char mark, char otherMark) -> Position {
@@ -150,11 +145,14 @@ const auto searchPortals = [](auto const& input) {
                 portalName += input[i][j];
                 portalName += input[i][j + 1];
 
-                //if (j == 0 || j == (width%2? width- 2:width - 3))
-                if (j == 0 || i ==0 || i == width - 2 || j == width -2 || i == width - 3 || j == width -3)
+                if (j == 0 || i ==0 || i == width - 2 || j == width -2 || i == width - 3 || j == width -3){
                     m[portalName].out = { x, y };
-                else
+                    depth_change[{x,y}] = -1;
+                }
+                else {
                     m[portalName].in = { x, y };
+                    depth_change[{x,y}] = 1;
+                }
             }
         }
     }
@@ -176,11 +174,14 @@ const auto searchPortals = [](auto const& input) {
                 portalName += input[j][i];
                 portalName += input[j + 1][i];
 
-                //if (j == 0 || j == input.size() - 2u)
-                if (j == 0 || i ==0 || i == input.size() - 2u || j == input.size() -2u|| i == input.size() - 3u || j == input.size() -3u)
+                if (j == 0 || i ==0 || i == input.size() - 2u || j == input.size() -2u|| i == input.size() - 3u || j == input.size() -3u) {
                     m[portalName].out = { x, y };
-                else
+                    depth_change[{x,y}] = -1;
+                }
+                else{
                     m[portalName].in = { x, y };
+                    depth_change[{x,y}] = 1;
+                }
             }
         }
     }
@@ -197,120 +198,53 @@ const auto searchPortals = [](auto const& input) {
         m["ZZ"].out = m["ZZ"].in;
 
     for (auto& e: m) {
-        portals[e.second.in] = e.second.out;
-        portals[e.second.out] = e.second.in;
-    }
-};
-
-const auto getEmptyPositionCount = [](auto& map) {
-    std::size_t sum = 0;
-    for (auto& line : map) {
-        sum += std::count_if(line.begin(), line.end(), [](auto el) {return el == '.'; });
-    }
-    return sum;
-};
-
-std::size_t searchPossibleMovesFromPosition(std::string from, Position pos, Position end) {
-    auto x = pos.x;
-    auto y = pos.y;
-
-    if (x >= maps[level].size()) return 0;
-    if (y >= maps[level][x].size()) return 0;
-    if (maps[level][x][y] == '#' || maps[level][x][y] == ' ' || maps[level][x][y] == '@') {
-        return 0;
-    }
-    if (pos == end && level == 0) {
-        std::cout << "\t\t\t\t\t\t\tFINISHED! In " << range << " steps\n";
-        return 0;
-    }
-
-    if (maps[level][x][y] == '.') {
-        maps[level][x][y] = '@';
-        if (level == 0)
-            range++;
-
-        auto xx = x;
-        auto yy = y;
-        auto it = std::find_if(m.begin(), m.end(), [&](auto& p) {
-            return p.second.in == pos || p.second.out == pos; });
-        if (it != m.end()) {
-            const std::string current = it->first;
-            if (from != current && current != "ZZ" && current != "AA") {
-                if (x == it->second.in.x && y == it->second.in.y) {
-                    xx = it->second.out.x;
-                    yy = it->second.out.y;
-                    //if (level < m.size() - 2)
-                    ++level;
-                    std::cout << "recurse into level " << level << " through " << current << std::endl;
-                    range += 1;
-                }
-                else {
-                    xx = it->second.in.x;
-                    yy = it->second.in.y;
-                    if (level > 0)
-                        --level;
-                    std::cout << "Return to level " << level << " through " << current << std::endl;
-                    range += 1;
-                }
-                searchPossibleMovesFromPosition(current, { xx, yy }, end);
-            }
+        if (e.first != "AA" && e.first != "ZZ") {
+            portals[e.second.in] = e.second.out;
+            portals[e.second.out] = e.second.in;
         }
     }
-
-    if (maps[level][x][y] >= 'A' && maps[level][x][y] <= 'Z') {
-        return 0;
-    }
-
-
-    printData(maps[level]);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    // std::getchar();
-
-    auto sum = 0;
-    sum += searchPossibleMovesFromPosition(from, { x - 1, y }, end);
-    sum += searchPossibleMovesFromPosition(from, { x + 1, y }, end);
-    sum += searchPossibleMovesFromPosition(from, { x, y + 1 }, end);
-    sum += searchPossibleMovesFromPosition(from, { x, y - 1 }, end);
-    if (getEmptyPositionCount(maps[level]) == 0) {
-        while (getEmptyPositionCount(maps[level]) == 0) {
-            if (level > 0) --level;
-        }
-    }
-    return range + sum;
 };
 
 void bfs(map_type& map, Position startingPos, Position endPos) {
     std::queue<Position> q;
-
+    const auto MAX_DEPTH = m.size() - 1;
     std::array<int, 4> x_dir = { -1, 0 ,0, 1 };
     std::array<int, 4> y_dir = { 0, -1 ,1, 0 };
-    std::set<std::tuple<int, int>> visited;
+    std::vector<std::set<std::tuple<int, int>>> visited(MAX_DEPTH);
 
     q.push(startingPos);
 
     while (not q.empty()) {
         auto move = q.front();
+        auto& level = move.level;
         q.pop();
 
-        if (move == endPos) {
+        if (move == endPos && level == 0) {
             std::cout << '\n' << move.steps << '\n';
             continue ;
         }
-        if (!visited.emplace(move.x, move.y).second) continue;
+        if (!visited[level].emplace(move.x, move.y).second) continue;
 
         for (int i = 0; i < 4; ++i) {
 
             auto x = move.x + x_dir[i];
             auto y = move.y + y_dir[i];
 
-            if (x >= map.size() || y >= map[0].size()) continue;
-            const char c = map[x][y];
+            if (x >= maps[level].size() || y >= maps[level][0].size()) continue;
+            const char c = maps[level][x][y];
 
-            if (c == '.')
-                q.push({x,y, move.steps +1});
+            if (c == '.'){
+                q.push({x,y, move.steps +1, level});
+                printData(maps[level], level, x, y, c);
+            }
             else if (c >= 'A' && c <= 'Z' && portals.count({x,y})) {
                 auto newPos = portals[{x,y}];
                 newPos.steps = move.steps;
+                printData(maps[level], level, x, y, c);
+                level += depth_change[{x,y}];
+                if (level >= MAX_DEPTH) level = MAX_DEPTH - 1;
+                else if (level < 0) level = 0;
+                newPos.level = level;
                 q.push(newPos);
             }
         }
@@ -328,7 +262,6 @@ int main(int argc, char** argv)
     }
 
     const std::string path = argv[1];
-    //const std::string path = "C:\\Users\\staho\\projects\\aoc2019\\_sln\\ConsoleApplication1\\x64\\Debug\\test1";
     auto input = loadData(path);
     auto startingPos = getStartingPosition(input);
     auto ending = getEndingPos(input);
@@ -343,11 +276,11 @@ int main(int argc, char** argv)
 
     for (auto i = 0u; i < m.size() - 1 /*except ZZ portal*/; ++i) {
         maps.push_back(input);
-        ranges.push_back(0);
     }
     map = input;
     bfs(map, startingPos, ending);
 
     //516 - OK
+    //562 - too low
     return 0;
 }
