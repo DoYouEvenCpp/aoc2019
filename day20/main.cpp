@@ -25,6 +25,7 @@ struct Position {
     std::size_t y;
     int steps;
     std::set<std::tuple<int, int>> visited;
+    std::list<std::string> portals;
     bool operator==(Position const& o) const {
         return o.x == x && o.y == y;
     }
@@ -147,7 +148,7 @@ const auto searchPortals = [](auto const& input) {
                 portalName += input[i][j];
                 portalName += input[i][j + 1];
 
-                if (j == 0 || j == width - 2 - 1)
+                if (j == 0 || j == (width%2? width- 2:width - 3))
                     m[portalName].out = { x, y };
                 else
                     m[portalName].in = { x, y };
@@ -155,8 +156,8 @@ const auto searchPortals = [](auto const& input) {
         }
     }
 
-    for (auto i = 0; i < width; ++i) {
-        for (auto j = 0; j < input.size() - 1; ++j) {
+    for (auto i = 0u; i < width; ++i) {
+        for (auto j = 0u; j < input.size() - 1; ++j) {
             if ((input[j][i] >= 'A' && input[j][i] <= 'Z') && (input[j + 1][i] >= 'A' && input[j + 1][i] <= 'Z')) {
                 std::size_t x = 0;
                 const std::size_t y = i;
@@ -164,7 +165,7 @@ const auto searchPortals = [](auto const& input) {
                     if (input[j - 1][i] == '.') {
                         x = j-1;
                     }
-                if (j < input.size() - 2)
+                if (j < input.size() - 2u)
                     if (input[j + 2][i] == '.') {
                         x = j + 2;
                     }
@@ -172,7 +173,7 @@ const auto searchPortals = [](auto const& input) {
                 portalName += input[j][i];
                 portalName += input[j + 1][i];
 
-                if (j == 0 || j == input.size() - 2)
+                if (j == 0 || j == input.size() - 2u)
                     m[portalName].out = { x, y };
                 else
                     m[portalName].in = { x, y };
@@ -191,9 +192,7 @@ const auto searchPortals = [](auto const& input) {
     else
         m["ZZ"].out = m["ZZ"].in;
 };
-const auto getPositions(std::string point) {
-    return std::make_tuple(m[point].in, m[point].out);
-}
+
 const auto getEmptyPositionCount = [](auto& map) {
     std::size_t sum = 0;
     for (auto& line : map) {
@@ -271,15 +270,15 @@ std::size_t searchPossibleMovesFromPosition(std::string from, Position pos, Posi
     return range + sum;
 };
 
-int32_t bfs(map_type map, Position startingPos) {
+void bfs(map_type& map, Position startingPos) {
     std::queue<Position> q;
-    std::set<std::tuple<int, int>> visited;
 
     std::array<int, 4> x_dir = { -1, 0 ,0, 1 };
     std::array<int, 4> y_dir = { 0, -1 ,1, 0 };
 
-    visited.emplace(startingPos.x, startingPos.y);
-    q.push({ startingPos.x, startingPos.y, 0, visited });
+    startingPos.visited.emplace(startingPos.x, startingPos.y);
+    q.push({ startingPos.x, startingPos.y, 0, startingPos.visited });
+
     while (not q.empty()) {
         auto move = q.front();
         q.pop();
@@ -287,7 +286,10 @@ int32_t bfs(map_type map, Position startingPos) {
         auto v = move.visited;
 
         if (m["ZZ"].in == move) {
-            std::cout << "FINISHED in " << move.steps << '\n';
+            std::cout << "FINISHED in " << move.steps << " going through: ";
+            for (auto& portal: move.portals)
+                std::cout << portal <<' ';
+            std::cout << '\n';
             continue;
         }
 
@@ -300,42 +302,29 @@ int32_t bfs(map_type map, Position startingPos) {
             if (x >= map.size() || y >= map[0].size()) continue;
             const char c = map[x][y];
             if (c == '#' || c == ' ') continue;
-            bool flag = false;
-            if (c == '.' || (c >= 'B' && c <= 'Y')) {
-                if (c >= 'B' && c <= 'Y') {
-                    auto it = std::find_if(m.begin(), m.end(), [pos = move](auto const& p) {
-                        return p.second.in == pos || p.second.out == pos; });
-                    if (it != m.cend() && it->first != "AA") {
-                        if (move == it->second.in) {
-                            x = it->second.out.x;
-                            y = it->second.out.y;
-                        }
-                        else if (move == it->second.out) {
-                            x = it->second.in.x;
-                            y = it->second.in.y;
-                        }
-                        flag = true;
+                auto it = std::find_if(m.begin(), m.end(), [pos = move](auto const& p) {
+                    return p.second.in == pos || p.second.out == pos; });
+                if (it != m.cend() && it->first != "AA" && move.portals.back() != it->first) {
+                    if (move == it->second.in) {
+                        x = it->second.out.x;
+                        y = it->second.out.y;
                     }
+                    else if (move == it->second.out) {
+                        x = it->second.in.x;
+                        y = it->second.in.y;
+                    }
+                    move.portals.push_back(it->first);
                 }
 
                 if (v.count(std::make_tuple(x, y))) continue;
 
-                /*map[x][y] = '*';
-                printData(map);
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                map[x][y] = c;*/
-
                 v.emplace(x, y);
-                if (flag)
-                    v.emplace(move.x + x_dir[i], move.y + y_dir[i]);
-                q.push({ x, y, move.steps + 1 , v});
+                q.push({x, y, move.steps + 1 , v, move.portals});
                 v = v_copy;
-                if (flag) break;
-            }
         }
 
     }
-    return -1;
+    return;
 }
 }
 
@@ -360,12 +349,11 @@ int main(int argc, char** argv)
                   << ", " << entry.second.in.x << ',' << entry.second.in.y << ")\n";
     }
 
-    for (auto i = 0; i < m.size() - 1 /*except ZZ portal*/; ++i) {
+    for (auto i = 0u; i < m.size() - 1 /*except ZZ portal*/; ++i) {
         maps.push_back(input);
         ranges.push_back(0);
     }
     map = input;
-    //searchPossibleMovesFromPosition("AA", startingPos, ending);
     bfs(map, startingPos);
 
     //516 - OK
