@@ -66,7 +66,7 @@ const auto loadData = [](auto path) {
 };
 const auto printData = [](auto& data, int level, int x=0, int y=0, char c=0) {
     if (x != 0 && y != 0)
-        data[x][y] = '#';
+        data[x][y] = '*';
 
     std::cout << "\n\tLEVEL: " << level << '\n';
     for (auto& line : data) {
@@ -205,52 +205,54 @@ const auto searchPortals = [](auto const& input) {
     }
 };
 
-void bfs(map_type& map, Position startingPos, Position endPos) {
+int bfs(map_type& map, Position startingPos, Position endPos) {
     std::queue<Position> q;
     const auto MAX_DEPTH = m.size() - 1;
     std::array<int, 4> x_dir = { -1, 0 ,0, 1 };
     std::array<int, 4> y_dir = { 0, -1 ,1, 0 };
-    std::vector<std::set<std::tuple<int, int>>> visited(MAX_DEPTH);
+    std::vector<std::set<std::tuple<int, int>>> visited(MAX_DEPTH + 1);
 
+    visited[0].emplace(startingPos.x, startingPos.y);
     q.push(startingPos);
 
     while (not q.empty()) {
         auto move = q.front();
-        auto& level = move.level;
         q.pop();
 
-        if (move == endPos && level == 0) {
-            std::cout << '\n' << move.steps << '\n';
-            continue ;
+        if (move == endPos && move.level == 0) {
+            return move.steps-1;
         }
-        if (!visited[level].emplace(move.x, move.y).second) continue;
+
 
         for (int i = 0; i < 4; ++i) {
 
             auto x = move.x + x_dir[i];
             auto y = move.y + y_dir[i];
+            auto level = move.level;
 
+            if (visited[level].count(std::make_tuple(x,y)) > 0) continue;
             if (x >= maps[level].size() || y >= maps[level][0].size()) continue;
             const char c = maps[level][x][y];
+            if ( c == '#') continue;
 
             if (c == '.'){
                 q.push({x,y, move.steps +1, level});
-                printData(maps[level], level, x, y, c);
+                visited[level].emplace(x, y);
             }
             else if (c >= 'A' && c <= 'Z' && portals.count({x,y})) {
                 auto newPos = portals[{x,y}];
                 newPos.steps = move.steps;
-                printData(maps[level], level, x, y, c);
                 level += depth_change[{x,y}];
-                if (level >= MAX_DEPTH) level = MAX_DEPTH - 1;
-                else if (level < 0) level = 0;
+                if (level > MAX_DEPTH) level = MAX_DEPTH;
+                else if (level < 0) continue;
                 newPos.level = level;
                 q.push(newPos);
+                visited[level].emplace(newPos.x, newPos.y);
             }
         }
 
     }
-    return;
+    return -1;
 }
 }
 
@@ -263,10 +265,10 @@ int main(int argc, char** argv)
 
     const std::string path = argv[1];
     auto input = loadData(path);
-    auto startingPos = getStartingPosition(input);
-    auto ending = getEndingPos(input);
-    auto map = input;
     searchPortals(input);
+    auto map = input;
+    auto startingPos = m["AA"].in;
+    auto ending = getEndingPos(input);
 
     for (auto& entry: m) {
         std::cout << entry.first << '\t'
@@ -278,9 +280,9 @@ int main(int argc, char** argv)
         maps.push_back(input);
     }
     map = input;
-    bfs(map, startingPos, ending);
+    std::cout << bfs(map, startingPos, ending) << '\n';
 
-    //516 - OK
-    //562 - too low
+    //516  - OK
+    //5966 - OK
     return 0;
 }
