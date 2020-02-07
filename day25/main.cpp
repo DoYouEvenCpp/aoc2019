@@ -347,11 +347,19 @@ int main()
 
     std::string s;
     //subopitmal route
-    std::vector<std::string> saved = { {"south" },{"take fixed point"},{"north"},{"west"},{"west"},{"west"},{"take hologram"},{"east"},{"north"},{"east"},{"west"},{"west"},{"east"},{"south"},{"east"},{"east"},{"north"},{"take candy cane"},{"west"},{"take antenna"},{"west"},{"take shell"},{"west"},{"east"},{"south"},{"west"},{"east"},{"north"},{"east"},{"south"},{"take whirled peas"},{"north"},{"east"},{"south"},{"north"},{"north"},{"north"},{"take polygon"},{"south"},{"west"},{"take fuel cell"},{"west"} };
-    std::array<std::string, 8> items = {"fixed point", "hologram", "candy cane", "antenna", "shell", "whirled peas", "polygon", "fuel cell" };
+    std::vector<std::string> saved = { {"south" },{"take fixed point"},{"north"},{"west"},{"west"},{"west"},{"take hologram"},{"east"},{"north"},{"east"},{"west"},{"west"},{"east"},{"south"},{"east"},{"east"},{"north"},{"take candy cane"},{"west"},{"take antenna"},{"west"},{"take shell"},{"west"},{"east"},{"south"},{"west"},{"east"},{"north"},{"east"},{"south"},{"take whirled peas"},{"north"},{"east"},{"south"},{"north"},{"north"},{"north"},{"take polygon"},{"south"},{"west"},{"take fuel cell"},{"west"},
+    {"drop hologram"}, {"drop shell"}, {"drop whirled peas"}, {"drop fuel cell"}, {"drop fixed point"}, {"drop polygon"}, {"drop antenna"}, {"drop candy cane"},
+    {"west"},
+    /*HERE COMES THE ANSWER*/
+    {"take fixed point"},
+    {"take polygon"},
+    {"take candy cane"},
+    {"take shell"},
+    {"west"}};
     std::reverse(saved.begin(), saved.end());
     while(true) {
-        auto [val, opCode, buf] = pc.run(0);
+        auto [_, opCode, buf] = pc.run(0);
+        (void)(_);
         if (opCode == OpCodes::STOP) {
             std::cout << buf << '\n';
             break;
@@ -360,17 +368,11 @@ int main()
             s = saved.back();
             saved.pop_back();
         }
-        else 
-            std::getline(std::cin, s);
-        //saved.push_back(s);
-        if (s == "help") {
-            for (auto q : saved)
-                std::cout << q << '\n';
-        }
-        for (auto ch: s) {
-            pc.instructions.push(static_cast<int>(ch));
-        }
-        pc.instructions.push(static_cast<int>('\n'));
+        //that would be manual mode
+        else std::getline(std::cin, s);
+            for (auto ch: s)
+                pc.instructions.push(static_cast<int>(ch));
+            pc.instructions.push(static_cast<int>('\n'));
     }
     return 0;
 }
